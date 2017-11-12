@@ -3,25 +3,30 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 #include "AllocatorBase.h"
 
 class PoolAllocator : public AllocatorBase {
 public:
-    PoolAllocator() {
-        std::cout << "ctor PoolAllocator" << std::endl;
-    }
-    ~PoolAllocator() {
-        std::cout << "dtor PoolAllocator" << std::endl;
-    }
-    // template <typename T, typename... Args>
+	PoolAllocator(size_t elementSize, size_t numElements, int alignment = 1); // Alignment must a be power of 2
+	~PoolAllocator();
+
 private:
-    virtual void* alloc_internal(size_t size) {
-        return malloc(size);
-    }
-    virtual void dealloc_internal(void *p) {
-        free(p);
-    }
+	virtual void* alloc_internal(size_t size);
+	virtual void dealloc_internal(void *p);
+
+	void* basePointer;
+
+	// First and last elements of the free list
+	void* firstFree;
+	void* lastFree;
+
+	size_t elementSize;
+	size_t numElements;
+
+	// Number of currently allocated elements
+	size_t allocatedElements;
 };
 
 #endif
