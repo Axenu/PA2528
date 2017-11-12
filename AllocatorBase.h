@@ -17,7 +17,7 @@ public:
     }
     template <typename T, typename... Args>
     T* alloc_arr(size_t size, Args... args) {
-        std::cout << size << std::endl;
+        std::cout << "Alloc_arr with size: " << (sizeof(T)*size) << std::endl;
         T* memory = (T*)this->alloc_internal(sizeof(T)*size);
         for (int i = 0; i < size; i++) {
             new(&memory[i]) T(args...);

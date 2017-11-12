@@ -4,6 +4,7 @@
 
 #include "AllocatorBase.h"
 #include "PoolAllocator.h"
+#include "BuddyAllocator.h"
 
 
 // #define ALLOC(t, args...) currentGlobalAllocator->alloc<t>(__FILE__, __LINE__, args)
@@ -19,8 +20,11 @@ struct A
       std::cout << "ctor A" << std::endl;
       a = (char *)currentGlobalAllocator->alloc_arr<char>(size);
       // a = ALLOC_ARR(char, size);
-      a[0] = 1;
-      a[1] = 10;
+      // a[0] = 1;
+      // a[1] = 10;
+      for (int i = 0; i < size; i++) {
+          a[i] = 44;
+      }
   }
   ~A()
   {
@@ -30,6 +34,14 @@ struct A
   }
 
   char *a;
+};
+
+struct B {
+    int i;
+    B() {
+        std::cout << "ctor B" << std::endl;
+        i = 33;
+    }
 };
 
 void poolScenario() {
@@ -46,6 +58,13 @@ void poolScenario() {
     }
 }
 
+void buddyScenario() {
+    A *a = currentGlobalAllocator->alloc<A>(1);
+    A *b = currentGlobalAllocator->alloc<A>(3);
+    currentGlobalAllocator->dealloc(a);
+    currentGlobalAllocator->dealloc(b);
+}
+
 long clockFunction(void (*func) ()) {
     //start timer
     func();
@@ -56,15 +75,20 @@ long clockFunction(void (*func) ()) {
 int main()
 {
 
-    PoolAllocator *pool = new PoolAllocator();
-    currentGlobalAllocator = pool;
+    // PoolAllocator *pool = new PoolAllocator();
+    // currentGlobalAllocator = pool;
     // poolScenario();
-    clockFunction(poolScenario);
+    // clockFunction(poolScenario);
+
+    BuddyAllocator *buddy = new BuddyAllocator(4096);
+    currentGlobalAllocator = buddy;
+    clockFunction(buddyScenario);
 
     // StackAllocator *stack = new StackAllocator(10,1024, 4);
     // currentGlobalAllocator = stack;
     // poolScenario();
 
-    delete pool;
+    delete buddy;
+    // delete pool;
     return 0;
 }

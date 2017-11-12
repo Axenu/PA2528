@@ -8,9 +8,15 @@ OBJ=$(SRC:%.cpp=%.o)
 all: $(OBJ)
 	$(CXX) -o $(BIN) $^
 
+$(BIN): $(OBJ)
+	$(CXX) -o $(BIN) $^
+
 %.o: %.c
 	$(CXX) $@ -c $<
 
 clean:
 	rm -f *.o
 	rm $(BIN)
+
+run: $(BIN)
+	./$(BIN)
