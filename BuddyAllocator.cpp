@@ -1,4 +1,5 @@
 #include "BuddyAllocator.h"
+#include <cstring>
 
 //init
 // blockSize: number of bytes to allocate
