@@ -3,8 +3,6 @@
 
 #include "AllocatorBase.h"
 
-#include <vector>
-
 class StompAllocator : public AllocatorBase {
 public:
     StompAllocator(bool checkOverrun);
@@ -25,7 +23,8 @@ private:
     };
     static const size_t M_PAGE_SIZE;
     const bool M_CHECK_OVERRUN;
-    std::vector<Block> mFreeBlocks;
+    Block* mFreeBlocks;
+    size_t mNumFreeBlocks;
 };
 
 #endif

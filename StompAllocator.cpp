@@ -22,9 +22,16 @@ const size_t StompAllocator::M_PAGE_SIZE = []() {
 
 StompAllocator::StompAllocator(bool checkOverrun)
 : M_CHECK_OVERRUN(checkOverrun) {
+    mNumFreeBlocks = 0;
+    mFreeBlocks = (Block*)alloc_internal(M_PAGE_SIZE * 100000);
 }
 
 StompAllocator::~StompAllocator() {
+    Block* freeBlocks = mFreeBlocks;
+    Block b;
+    mFreeBlocks = &b;
+    mNumFreeBlocks = 0;
+    dealloc_internal((void*)freeBlocks);
 }
 
 size_t StompAllocator::getPageSize() {
@@ -40,11 +47,12 @@ void* StompAllocator::alloc_internal(size_t size) {
     BlockSize blockSize = size + M_PAGE_SIZE + distanceToPageBoundary;
     BlockSize dataSize = blockSize;
     char* block = nullptr;
-    for(auto it = mFreeBlocks.begin(); it != mFreeBlocks.end(); it++) {
-        if(dataSize <= it->size) {
-            block = (char*)it->ptr;
-            blockSize = it->size;
-            mFreeBlocks.erase(it);
+    for(size_t i = 0; i < mNumFreeBlocks; i++) {
+        if(dataSize <= mFreeBlocks[i].size) {
+            block = mFreeBlocks[i].ptr;
+            blockSize = mFreeBlocks[i].size;
+            memcpy(mFreeBlocks + i, mFreeBlocks + i + 1, sizeof(Block) * (mNumFreeBlocks - i - 1));
+            mNumFreeBlocks--;
             break;
         }
     }
@@ -91,5 +99,6 @@ void StompAllocator::dealloc_internal(void *p) {
     b.size = *blockSize;
 
     protect(b.ptr, b.size, PAGE_NOACCESS, &prevProtect);
-    mFreeBlocks.push_back(b);
+    mFreeBlocks[mNumFreeBlocks] = b;
+    mNumFreeBlocks++;
 }
