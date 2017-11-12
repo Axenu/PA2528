@@ -55,8 +55,7 @@ long clockFunction(void (*func) ()) {
 
 int main()
 {
-
-    PoolAllocator *pool = new PoolAllocator();
+    PoolAllocator *pool = new PoolAllocator(sizeof(int), 4, 4);
     currentGlobalAllocator = pool;
     // poolScenario();
     clockFunction(poolScenario);
