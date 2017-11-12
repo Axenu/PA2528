@@ -6,5 +6,6 @@ class AllocatorBase;
 void stompOverrunFailScenario(AllocatorBase* currentGlobalAllocator);
 void stompUnderrunFailScenario(AllocatorBase* currentGlobalAllocator);
 void stompPassScenario(AllocatorBase* currentGlobalAllocator);
+void runStompScenarios();
 
 #endif
