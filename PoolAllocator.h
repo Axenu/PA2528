@@ -22,6 +22,8 @@ private:
 	void* firstFree;
 	void* lastFree;
 
+	int alignment;
+
 	size_t elementSize;
 	size_t numElements;
 
