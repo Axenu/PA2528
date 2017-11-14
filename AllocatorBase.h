@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#define ENABLE_STOMP
+//#define ENABLE_STOMP
 
 #ifdef ENABLE_STOMP
 class StompAllocator;
