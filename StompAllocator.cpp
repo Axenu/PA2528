@@ -1,37 +1,42 @@
+
 #include "StompAllocator.h"
 
 #include <iostream>
 #include <cstdlib>
 
-#ifdef __WIN32
+#ifndef __WIN32
+#error Unsupported platform.
+#endif // __WIN32
+
 #include <malloc.h>
 #include <windows.h>
+#include <cassert>
+
 const size_t StompAllocator::M_PAGE_SIZE = []() {
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
     return sysInfo.dwPageSize;
 }();
-#define aligned_malloc(size, alignment) _aligned_malloc(size, alignment)
-#define aligned_free(memblock) _aligned_free(memblock)
-#define protect(block, size, access, previousAccess) VirtualProtect(block, size, access, previousAccess)
+
+StompAllocator::StompAllocator(AllocatorBase* allocator, bool doCheckOverrun)
+#ifdef ENABLE_STOMP
+: AllocatorBase(AllocatorBase::StompFlag())
 #else
-#error Unsupported platform.
-#endif
-
-
-
-StompAllocator::StompAllocator(bool checkOverrun)
-: M_CHECK_OVERRUN(checkOverrun) {
-    mNumFreeBlocks = 0;
-    mFreeBlocks = (Block*)alloc_internal(M_PAGE_SIZE * 100000);
+: AllocatorBase()
+#endif // ENABLE_STOMP
+, M_CHECK_OVERRUN(doCheckOverrun)
+, mAllocator(allocator)
+{
+//    mNumFreeBlocks = 0;
+//    mFreeBlocks = (Block*)alloc_internal(M_PAGE_SIZE * 100000);
 }
 
 StompAllocator::~StompAllocator() {
-    Block* freeBlocks = mFreeBlocks;
-    Block b;
-    mFreeBlocks = &b;
-    mNumFreeBlocks = 0;
-    dealloc_internal((void*)freeBlocks);
+//    Block* freeBlocks = mFreeBlocks;
+//    Block b;
+//    mFreeBlocks = &b;
+//    mNumFreeBlocks = 0;
+//    dealloc_internal((void*)freeBlocks);
 }
 
 size_t StompAllocator::getPageSize() {
@@ -39,66 +44,89 @@ size_t StompAllocator::getPageSize() {
 }
 
 void* StompAllocator::alloc_internal(size_t size) {
+//    std::cout << "stomp alloc" << std::endl;
     if(M_CHECK_OVERRUN) {
-        size += sizeof(BlockSize);
+        size += sizeof(BlockSize) * 2;
     }
 
     size_t distanceToPageBoundary = (M_PAGE_SIZE - size % M_PAGE_SIZE) % M_PAGE_SIZE;
-    BlockSize blockSize = size + M_PAGE_SIZE + distanceToPageBoundary;
-    BlockSize dataSize = blockSize;
-    char* block = nullptr;
-    for(size_t i = 0; i < mNumFreeBlocks; i++) {
-        if(dataSize <= mFreeBlocks[i].size) {
-            block = mFreeBlocks[i].ptr;
-            blockSize = mFreeBlocks[i].size;
-            memcpy(mFreeBlocks + i, mFreeBlocks + i + 1, sizeof(Block) * (mNumFreeBlocks - i - 1));
-            mNumFreeBlocks--;
-            break;
-        }
-    }
-    if(!block) {
-        block = (char*)aligned_malloc(dataSize, M_PAGE_SIZE);
-    }
+    BlockSize blockSize = size + M_PAGE_SIZE * 2 + distanceToPageBoundary;
+    char* block = (char*)mAllocator->alloc_internal(blockSize);
+    BlockSize alignmentOffset = (M_PAGE_SIZE - size_t(block) % M_PAGE_SIZE) % M_PAGE_SIZE;
 
+
+    DWORD prevProtect;
+    VirtualProtect(block + alignmentOffset, blockSize - M_PAGE_SIZE, PAGE_READWRITE, &prevProtect);
     char* ptr;
     char* protectPage;
-    DWORD prevProtect;
-    protect(block, dataSize, PAGE_READWRITE, &prevProtect);
     if(M_CHECK_OVERRUN) {
-        ptr = block + distanceToPageBoundary;
-        *((BlockSize*)ptr) = blockSize;
-        ptr += sizeof(BlockSize);
-        protectPage = block + dataSize - M_PAGE_SIZE;
+        ptr = block + alignmentOffset + distanceToPageBoundary;
+        protectPage = block + alignmentOffset + blockSize - M_PAGE_SIZE * 2;
     }
     else {
-        ptr = block + M_PAGE_SIZE;
-        *((BlockSize*)block) = blockSize;
-        protectPage = block;
+        ptr = block + alignmentOffset + M_PAGE_SIZE - sizeof(BlockSize) * 2;
+        protectPage = block + alignmentOffset;
     }
-    protect(protectPage, M_PAGE_SIZE, PAGE_NOACCESS, &prevProtect);
+    *((BlockSize*)ptr) = ptr - block;
+    ptr += sizeof(BlockSize);
+    *((BlockSize*)ptr) = blockSize;
+    ptr += sizeof(BlockSize);
+    VirtualProtect(protectPage, M_PAGE_SIZE, PAGE_NOACCESS, &prevProtect);
     return ptr;
 }
 
 void StompAllocator::dealloc_internal(void *p) {
-    char* block;
-    BlockSize* blockSize;
-    if(M_CHECK_OVERRUN) {
-        char* ptr = (char*)p - sizeof(BlockSize);
-        block = ptr - size_t(ptr) % M_PAGE_SIZE;
-        blockSize = (BlockSize*)ptr;
-    }
-    else {
-        block = (char*)p - M_PAGE_SIZE;
-        blockSize = (BlockSize*)block;
-    }
+//    std::cout << "stomp dealloc" << std::endl;
+
+
+    char* ptr = (char*)p;
+
     DWORD prevProtect;
-    protect(blockSize, sizeof(BlockSize), PAGE_READONLY, &prevProtect);
+    if(!M_CHECK_OVERRUN) {
+        assert(size_t(ptr) % M_PAGE_SIZE == 0);
+        VirtualProtect(ptr - 1, 1, PAGE_READWRITE, &prevProtect);
+    }
 
-    Block b;
-    b.ptr = block;
-    b.size = *blockSize;
+    ptr -= sizeof(BlockSize);
+    BlockSize blockSize = *(BlockSize*)ptr;
+    ptr -= sizeof(BlockSize);
+    BlockSize offset = *(BlockSize*)ptr;
 
-    protect(b.ptr, b.size, PAGE_NOACCESS, &prevProtect);
-    mFreeBlocks[mNumFreeBlocks] = b;
-    mNumFreeBlocks++;
+
+    char* block = ptr - offset;
+    BlockSize alignmentOffset = (M_PAGE_SIZE - size_t(block) % M_PAGE_SIZE) % M_PAGE_SIZE;
+    if(M_CHECK_OVERRUN) {
+        VirtualProtect(block + alignmentOffset + blockSize - M_PAGE_SIZE * 2, M_PAGE_SIZE, PAGE_READWRITE, &prevProtect);
+    }
+
+    mAllocator->dealloc_internal(block);
+
+//    VirtualProtect(block + alignmentOffset, blockSize - M_PAGE_SIZE, PAGE_NOACCESS, &prevProtect);
+
+
+
+
+
+
+//    char* block;
+//    BlockSize* blockSize;
+//    if(M_CHECK_OVERRUN) {
+//        char* ptr = (char*)p - sizeof(BlockSize);
+//        block = ptr - size_t(ptr) % M_PAGE_SIZE;
+//        blockSize = (BlockSize*)ptr;
+//    }
+//    else {
+//        block = (char*)p - M_PAGE_SIZE;
+//        blockSize = (BlockSize*)block;
+//    }
+//    DWORD prevProtect;
+//    VirtualProtect(blockSize, sizeof(BlockSize), PAGE_READONLY, &prevProtect);
+//
+//    Block b;
+//    b.ptr = block;
+//    b.size = *blockSize;
+//
+//    VirtualProtect(b.ptr, b.size, PAGE_NOACCESS, &prevProtect);
+//    mFreeBlocks[mNumFreeBlocks] = b;
+//    mNumFreeBlocks++;
 }

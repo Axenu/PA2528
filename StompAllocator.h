@@ -5,7 +5,7 @@
 
 class StompAllocator : public AllocatorBase {
 public:
-    StompAllocator(bool checkOverrun);
+    StompAllocator(AllocatorBase* allocator, bool doCheckOverrun);
     ~StompAllocator();
 
     static size_t getPageSize();
@@ -23,6 +23,7 @@ private:
     };
     static const size_t M_PAGE_SIZE;
     const bool M_CHECK_OVERRUN;
+    AllocatorBase* mAllocator;
     Block* mFreeBlocks;
     size_t mNumFreeBlocks;
 };
