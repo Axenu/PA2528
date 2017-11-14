@@ -51,7 +51,11 @@ void* StompAllocator::alloc_internal(size_t size) {
 
     size_t distanceToPageBoundary = (M_PAGE_SIZE - size % M_PAGE_SIZE) % M_PAGE_SIZE;
     BlockSize blockSize = size + M_PAGE_SIZE * 2 + distanceToPageBoundary;
+    #ifdef ENABLE_STOMP
     char* block = (char*)mAllocator->alloc_internal(blockSize);
+    #else
+    char* block = (char*)malloc(blockSize);
+    #endif // ENABLE_STOMP
     BlockSize alignmentOffset = (M_PAGE_SIZE - size_t(block) % M_PAGE_SIZE) % M_PAGE_SIZE;
 
 
@@ -99,7 +103,11 @@ void StompAllocator::dealloc_internal(void *p) {
         VirtualProtect(block + alignmentOffset + blockSize - M_PAGE_SIZE * 2, M_PAGE_SIZE, PAGE_READWRITE, &prevProtect);
     }
 
+    #ifdef ENABLE_STOMP
     mAllocator->dealloc_internal(block);
+    #else
+    free(block);
+    #endif // ENABLE_STOMP
 
 //    VirtualProtect(block + alignmentOffset, blockSize - M_PAGE_SIZE, PAGE_NOACCESS, &prevProtect);
 
