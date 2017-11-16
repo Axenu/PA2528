@@ -28,7 +28,7 @@ private:
     size_t _totalSize;
     int _leaf_size;
     void *_origin;
-    int _num_levels;
+    short _num_levels;
     int *_buddyArray;
     int *_splitArray;
 
@@ -38,12 +38,9 @@ private:
     void *getBlockAtLevel(int level);
     void *split(void *, int level);
 
-    int nearestLevel(size_t size);
-    size_t nearestPowerOfTwo(size_t size);
-    int maxBlocksOfLevel(int n);
+    int nearestLevel(short size);
     int findLevel(void *p);
-    void *buddyPointer(void *p, int n);
-    void merge(void *p, int level);
+    void merge(void *p, short level);
 
     inline void setBit(int *A, int k) {
         A[k/32] |= (1 << (k%32));
@@ -59,27 +56,27 @@ private:
     }
 
     inline int indexInLevelOf(void *p, int n) {
-        return ((char *)p - (char *)_origin) / sizeOfLevel(n);
+        return (int)((char *)p - (char *)_origin) / sizeOfLevel(n);
     }
     inline int globalBuddyIndex(void *p, int n) {
         int levelSize = sizeOfLevel(n-1);
-        int index = ((char *)p - (char *)_origin) / (levelSize);
+        int index = (int)((char *)p - (char *)_origin) / (levelSize);
         // std::cout << "p: " << p << " orig: " << _origin << " diff: " << ((char *)p - (char *)_origin) / (levelSize >> 3) << " levelsize: " << levelSize << std::endl;
         index += (1 << (n-1)) - 1;
         return index;
     }
     inline int globalSplitIndex(void *p, int n) {
         int levelSize = sizeOfLevel(n);
-        int gi = ((char *)p - (char *)_origin) / levelSize;
+        int gi = (int)((char *)p - (char *)_origin) / levelSize;
         gi += (1 << (n)) - 1;
         return gi;
     }
-    inline int sizeOfLevel(int n) {
-        return _totalSize/(1<<n);
+    inline int sizeOfLevel(short n) {
+        return (int)_totalSize/(1<<n);
     }
 
-    inline void *pointerForIndex(int index, int n) {
-        return index * sizeOfLevel(n) + (int *)_origin;
+    inline void *pointerForIndex(int index, short n) {
+        return index * sizeOfLevel(n) + (char *)_origin;
     }
 
 };

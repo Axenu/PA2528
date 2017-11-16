@@ -5,6 +5,9 @@ BIN=main
 SRC=$(wildcard *.cpp)
 OBJ=$(SRC:%.cpp=%.o)
 
+#if optimize:
+CXXFLAGS:=-O3
+
 all: $(OBJ)
 	$(CXX) -o $(BIN) $^
 

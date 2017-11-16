@@ -1,10 +1,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <sys/time.h>
 
 #include "AllocatorBase.h"
 #include "PoolAllocator.h"
 #include "BuddyAllocator.h"
+#include "DefaultAllocator.h"
 
 
 // #define ALLOC(t, args...) currentGlobalAllocator->alloc<t>(__FILE__, __LINE__, args)
@@ -17,7 +19,7 @@ struct A
 {
   A(int size)
   {
-      std::cout << "ctor A" << std::endl;
+      // std::cout << "ctor A" << std::endl;
       a = (char *)currentGlobalAllocator->alloc_arr<char>(size);
       // a = ALLOC_ARR(char, size);
       // a[0] = 1;
@@ -28,7 +30,7 @@ struct A
   }
   ~A()
   {
-    std::cout << "dtor A" << std::endl;
+    // std::cout << "dtor A" << std::endl;
     currentGlobalAllocator->dealloc(a);
     // DEALLOC(a);
   }
@@ -39,7 +41,7 @@ struct A
 struct B {
     int i;
     B() {
-        std::cout << "ctor B" << std::endl;
+        // std::cout << "ctor B" << std::endl;
         i = 33;
     }
 };
@@ -58,31 +60,83 @@ void poolScenario() {
     }
 }
 
-void buddyScenario() {
-    A *a = currentGlobalAllocator->alloc<A>(1);
-    A *b = currentGlobalAllocator->alloc<A>(3);
-    currentGlobalAllocator->dealloc(a);
-    currentGlobalAllocator->dealloc(b);
+long buddyScenario() {
+    int count = 100;
+    char *arr[count];
+    int sizes[count];
+    for (int i = 0; i < count; i++) {
+        sizes[i] = 1 << ((i%10));
+//        std::cout << "size: " << sizes[i] << std::endl;
+    }
+    //start timer
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < count; j++) {
+            arr[j] = currentGlobalAllocator->alloc_arr<char>(sizes[j]);
+//            arr[j] = currentGlobalAllocator->alloc_arr<char>(32768);
+            //use the memory.
+        }
+        for (int j = 0; j < count; j++) {
+            //use the memory.
+            memset(arr[j], 255, sizes[j]);
+        }
+        for (int j = count-1; j >= 0; j--) {
+            currentGlobalAllocator->dealloc(arr[j]);
+        }
+
+    }
+    //end timer and return
+    gettimeofday(&stop, NULL);
+    long diff = (stop.tv_usec - start.tv_usec) + 1000000 * (stop.tv_sec - start.tv_sec);
+    return diff;
 }
 
 long clockFunction(void (*func) ()) {
     //start timer
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
     func();
     //end timer and return
-    return 1;
+    gettimeofday(&stop, NULL);
+    long diff = (stop.tv_usec - start.tv_usec) + 1000000 * (stop.tv_sec - start.tv_sec);
+    return diff;
 }
 
 int main()
 {
+
+    DefaultAllocator dAllocator = DefaultAllocator();
     // PoolAllocator *pool = new PoolAllocator(sizeof(int), 4, 4);
     // currentGlobalAllocator = pool;
 
     // poolScenario();
     // clockFunction(poolScenario);
 
-    BuddyAllocator *buddy = new BuddyAllocator(4096);
+    BuddyAllocator *buddy = new BuddyAllocator(1048576);
     currentGlobalAllocator = buddy;
-    clockFunction(buddyScenario);
+//    buddy->printMemory(1000000);
+//    int count = 10;
+//    char *arr[count];
+//    for (int j = 0; j < count; j++) {
+//        arr[j] = currentGlobalAllocator->alloc_arr<char>(128);
+////        arr[j][0] = 255;
+//    }
+//    for (int j = count-1; j >= 0; j--) {
+//        currentGlobalAllocator->dealloc(arr[j]);
+//    }
+//    buddy->printMemory(1000000);
+//    A *a = currentGlobalAllocator->alloc<A>(1);
+//    A *b = currentGlobalAllocator->alloc<A>(3);
+//    currentGlobalAllocator->dealloc(b);
+//    currentGlobalAllocator->dealloc(a);
+//    buddy->printMemory(8);
+//    A *c = currentGlobalAllocator->alloc<A>(1);
+//    currentGlobalAllocator->dealloc(c);
+//    buddy->printMemory(8);
+    printf("Buddy allocator took %lu microseconds.\n", buddyScenario());
+    currentGlobalAllocator = &dAllocator;
+    printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
 
     // StackAllocator *stack = new StackAllocator(10,1024, 4);
     // currentGlobalAllocator = stack;
