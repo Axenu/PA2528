@@ -115,25 +115,6 @@ int main()
 
     BuddyAllocator *buddy = new BuddyAllocator(1048576);
     currentGlobalAllocator = buddy;
-//    buddy->printMemory(1000000);
-//    int count = 10;
-//    char *arr[count];
-//    for (int j = 0; j < count; j++) {
-//        arr[j] = currentGlobalAllocator->alloc_arr<char>(128);
-////        arr[j][0] = 255;
-//    }
-//    for (int j = count-1; j >= 0; j--) {
-//        currentGlobalAllocator->dealloc(arr[j]);
-//    }
-//    buddy->printMemory(1000000);
-//    A *a = currentGlobalAllocator->alloc<A>(1);
-//    A *b = currentGlobalAllocator->alloc<A>(3);
-//    currentGlobalAllocator->dealloc(b);
-//    currentGlobalAllocator->dealloc(a);
-//    buddy->printMemory(8);
-//    A *c = currentGlobalAllocator->alloc<A>(1);
-//    currentGlobalAllocator->dealloc(c);
-//    buddy->printMemory(8);
     printf("Buddy allocator took %lu microseconds.\n", buddyScenario());
     currentGlobalAllocator = &dAllocator;
     printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());

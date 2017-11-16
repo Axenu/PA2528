@@ -1,3 +1,4 @@
+#ifdef __WIN32
 #include "StompScenarios.h"
 #include "StompAllocator.h"
 
@@ -112,3 +113,4 @@ void runStompScenarios()
     }
 
 }
+#endif

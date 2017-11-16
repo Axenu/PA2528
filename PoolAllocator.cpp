@@ -3,14 +3,14 @@
 #include "PoolAllocator.h"
 
 PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignment)
-	: numElements{ numElements }, allocatedElements{ 0 } {
-	std::cout << "ctor PoolAllocator" << std::endl;
-
+	: numElements(numElements), allocatedElements(0), alignment(alignment) {
 	// Ensure an element is at least the size of a pointer
+	// If element is smaller than alignment, use alignment size
 	this->elementSize = std::max(sizeof(void*), elementSize);
+	this->elementSize = std::max(static_cast<size_t>(alignment), this->elementSize);
 
 	// Get memory from OS
-	uintptr_t rawPointer = reinterpret_cast<uintptr_t>(malloc(elementSize * numElements + alignment));
+	uintptr_t rawPointer = reinterpret_cast<uintptr_t>(malloc(this->elementSize * numElements + alignment));
 
 	// Caculate the misalignment
 	uintptr_t misalignedBytes = rawPointer & (alignment - 1);
@@ -26,19 +26,20 @@ PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignme
 	// Loop through pool and initialize free list
 	for (size_t i = 0; i < numElements - 1; ++i) {
 		// Set this pointer to address of next element
-		reinterpret_cast<unsigned char**>(basePointer)[i] = &reinterpret_cast<unsigned char*>(basePointer)[(i + 1) * elementSize];
+		unsigned char** thisElementAddress = reinterpret_cast<unsigned char**>(reinterpret_cast<uintptr_t>(basePointer) + i * this->elementSize);
+		*thisElementAddress = reinterpret_cast<unsigned char*>(reinterpret_cast<uintptr_t>(basePointer) + (i + 1) * this->elementSize);
 	}
 
 	// Set the last element in the free list to nullptr
-	reinterpret_cast<unsigned char**>(basePointer)[(numElements - 1)] = nullptr;
+	unsigned char** lastElementAddress = reinterpret_cast<unsigned char**>(reinterpret_cast<uintptr_t>(basePointer) + (numElements - 1) * this->elementSize);
+	*lastElementAddress = nullptr;
 
 	// Initialize free list pointers
 	firstFree = basePointer;
-	lastFree = &reinterpret_cast<unsigned char*>(basePointer)[elementSize * (numElements - 1)];
+	lastFree = &reinterpret_cast<unsigned char*>(basePointer)[this->elementSize * (numElements - 1)];
 }
 
 PoolAllocator::~PoolAllocator() {
-	std::cout << "dtor PoolAllocator" << std::endl;
 	assert(allocatedElements == 0);
 
 	// Find the difference between basePointer and the pointer obtained from the OS. This number is stored in the byte before basePointer
@@ -50,7 +51,7 @@ PoolAllocator::~PoolAllocator() {
 }
 
 void* PoolAllocator::alloc_internal(size_t size) {
-	assert(allocatedElements < numElements);
+	//assert(allocatedElements < numElements);
 
 	++allocatedElements;
 
@@ -70,23 +71,24 @@ void PoolAllocator::dealloc_internal(void *p) {
 	uintptr_t deallocatedAddress = reinterpret_cast<uintptr_t>(p);
 	uintptr_t base = reinterpret_cast<uintptr_t>(basePointer);
 
-	size_t alignment = *(reinterpret_cast<unsigned char*>(basePointer) - 1);
-	assert(deallocatedAddress >= base);
-	assert((deallocatedAddress - base) % alignment == 0);
-	assert(deallocatedAddress - base < base + numElements * elementSize);
+	//assert(deallocatedAddress >= base);
+	//assert((deallocatedAddress - base) % alignment == 0);
+	//assert(deallocatedAddress - base < base + numElements * elementSize);
 
 	// Loop through free list to check that the pointer is not already deallocated
-	void* iterator = firstFree;
+	/*void* iterator = firstFree;
 	while (iterator != nullptr) {
 		assert(iterator != p);
 		iterator = *reinterpret_cast<unsigned char**>(iterator);
-	}
+	}*/
 
 	--allocatedElements;
 
 	if (lastFree != nullptr) {
 		*reinterpret_cast<unsigned char**>(lastFree) = reinterpret_cast<unsigned char*>(deallocatedAddress);
 		lastFree = reinterpret_cast<unsigned char*>(deallocatedAddress);
+		//unsigned char** last = reinterpret_cast<unsigned char**>(lastFree);
+		*reinterpret_cast<unsigned char**>(lastFree) = nullptr;
 	}
 	else {
 		firstFree = reinterpret_cast<void*>(deallocatedAddress);
