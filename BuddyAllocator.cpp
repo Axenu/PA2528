@@ -24,12 +24,6 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
     _buddyArray = (int *)_origin;
     _splitArray = (int *)((char *)_origin + sizeOfArray/2);
 
-//     std::cout << "_total_size in bytes: " << _totalSize << std::endl;
-//     std::cout << "_leaf_size in bytes: " << _leaf_size << std::endl;
-//     std::cout << "number of levels: " << _num_levels << std::endl;
-//     std::cout << "size of array in bytes: " << sizeOfArray << std::endl;
-//     std::cout << "array requires number of leaf blocks: " << numberOfBlocks << std::endl;
-
     // set all memory to 0
     memset(_origin, '\0', blockSize);
 
@@ -153,7 +147,7 @@ void BuddyAllocator::merge(void *p, short level) {
     }
 
     //remove buddy from _free_lists
-    
+
     BuddyHeader *bh = (BuddyHeader *)bptr;
     BuddyHeader *bhPrev = (BuddyHeader *)bh->prev;
     BuddyHeader *bhNext = (BuddyHeader *)bh->next;
@@ -227,7 +221,7 @@ void BuddyAllocator::printMemory(int lines) {
     }
 
     for (int i = 0; i < _num_levels; ++i) {
-        printf("%d\n", _free_lists[i]);
+        printf("%p\n", _free_lists[i]);
     }
 }
 // buddy

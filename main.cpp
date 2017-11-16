@@ -64,27 +64,28 @@ long buddyScenario() {
     int count = 100;
     char *arr[count];
     int sizes[count];
+    //create a set of sizes with sizes from 1 to 512 bytes.
     for (int i = 0; i < count; i++) {
         sizes[i] = 1 << ((i%10));
 //        std::cout << "size: " << sizes[i] << std::endl;
     }
+
     //start timer
     struct timeval stop, start;
     gettimeofday(&start, NULL);
     for (int i = 0; i < 100; i++) {
+        //allocate the memory
         for (int j = 0; j < count; j++) {
             arr[j] = currentGlobalAllocator->alloc_arr<char>(sizes[j]);
-//            arr[j] = currentGlobalAllocator->alloc_arr<char>(32768);
-            //use the memory.
         }
+        //use the memory.
         for (int j = 0; j < count; j++) {
-            //use the memory.
             memset(arr[j], 255, sizes[j]);
         }
+        //deallocate the memory
         for (int j = count-1; j >= 0; j--) {
             currentGlobalAllocator->dealloc(arr[j]);
         }
-
     }
     //end timer and return
     gettimeofday(&stop, NULL);

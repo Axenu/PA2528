@@ -5,7 +5,7 @@
 #endif // ENABLE_STOMP
 
 AllocatorBase::AllocatorBase() {
-    std::cout << "ctor AllocatorBase" << std::endl;
+    // std::cout << "ctor AllocatorBase" << std::endl;
 
     #ifdef ENABLE_STOMP
     mStompAllocator = new StompAllocator(this, true);
@@ -14,7 +14,7 @@ AllocatorBase::AllocatorBase() {
 
 #ifdef ENABLE_STOMP
 AllocatorBase::AllocatorBase(StompFlag stompFlag) {
-    std::cout << "ctor AllocatorBase" << std::endl;
+    // std::cout << "ctor AllocatorBase" << std::endl;
     mStompAllocator = this;
 }
 #endif // ENABLE_STOMP

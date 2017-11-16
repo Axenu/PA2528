@@ -32,38 +32,33 @@ private:
     int *_buddyArray;
     int *_splitArray;
 
+    //inherited methods for allocating
     virtual void* alloc_internal(size_t size);
     virtual void dealloc_internal(void *p);
 
+    //allocate a block
+    int nearestLevel(short size);
     void *getBlockAtLevel(int level);
     void *split(void *, int level);
 
-    int nearestLevel(short size);
+    // deallocate a block
     int findLevel(void *p);
     void merge(void *p, short level);
 
+    //some bit array functions
     inline void setBit(int *A, int k) {
         A[k/32] |= (1 << (k%32));
-        // A[k] = 1;
     }
     inline void unsetBit(int *A, int k) {
         A[k/32] &= ~(1 << (k%32));
-        // A[k] = 0;
     }
-
     inline bool getBit(int *A, int k) {
         return ( (A[k/32] & (1 << (k%32) )) != 0 );
     }
 
+
     inline int indexInLevelOf(void *p, int n) {
         return (int)((char *)p - (char *)_origin) / sizeOfLevel(n);
-    }
-    inline int globalBuddyIndex(void *p, int n) {
-        int levelSize = sizeOfLevel(n-1);
-        int index = (int)((char *)p - (char *)_origin) / (levelSize);
-        // std::cout << "p: " << p << " orig: " << _origin << " diff: " << ((char *)p - (char *)_origin) / (levelSize >> 3) << " levelsize: " << levelSize << std::endl;
-        index += (1 << (n-1)) - 1;
-        return index;
     }
     inline int globalSplitIndex(void *p, int n) {
         int levelSize = sizeOfLevel(n);
@@ -71,10 +66,12 @@ private:
         gi += (1 << (n)) - 1;
         return gi;
     }
+    inline int globalBuddyIndex(void *p, int n) {
+        return globalSplitIndex(p, n-1);
+    }
     inline int sizeOfLevel(short n) {
         return (int)_totalSize/(1<<n);
     }
-
     inline void *pointerForIndex(int index, short n) {
         return index * sizeOfLevel(n) + (char *)_origin;
     }
