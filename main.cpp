@@ -73,14 +73,21 @@ long buddyScenario() {
     //start timer
     struct timeval stop, start;
     gettimeofday(&start, NULL);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1000; i++) {
         //allocate the memory
         for (int j = 0; j < count; j++) {
             arr[j] = currentGlobalAllocator->alloc_arr<char>(sizes[j]);
         }
         //use the memory.
         for (int j = 0; j < count; j++) {
-            memset(arr[j], 255, sizes[j]);
+            memset(arr[j], j, sizes[j]);
+        }
+        //read the memory.
+        for (int j = 0; j < count; j++) {
+            char *a = arr[j];
+            if ((int)a[0] != j) {
+                std::cout << "error, data not persistent: " << a[0] << " and: " << sizes[j] << std::endl;
+            }
         }
         //deallocate the memory
         for (int j = count-1; j >= 0; j--) {
