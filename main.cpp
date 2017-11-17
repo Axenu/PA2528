@@ -8,6 +8,13 @@
 #include "BuddyAllocator.h"
 #include "DefaultAllocator.h"
 
+#ifndef __WIN32
+//mac
+#include <CoreServices/CoreServices.h>
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+#endif
+
 
 // #define ALLOC(t, args...) currentGlobalAllocator->alloc<t>(__FILE__, __LINE__, args)
 // #define ALLOC_ARR(t, size, args...) currentGlobalAllocator->alloc_arr<t>(__FILE__, __LINE__, size, args)
@@ -69,10 +76,17 @@ long buddyScenario() {
         sizes[i] = 1 << ((i%10));
 //        std::cout << "size: " << sizes[i] << std::endl;
     }
-
+    long diff;
     //start timer
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
+    #ifdef __WIN32
+    struct timespec ts_start;
+    struct timespec ts_end;
+    clock_gettime(CLOCK_MONOTONIC, &ts_start);
+    #else
+    uint64_t start, stop;
+    start = mach_absolute_time();
+    #endif
+
     for (int i = 0; i < 1000; i++) {
         //allocate the memory
         for (int j = 0; j < count; j++) {
@@ -85,8 +99,10 @@ long buddyScenario() {
         //read the memory.
         for (int j = 0; j < count; j++) {
             char *a = arr[j];
-            if ((int)a[0] != j) {
-                std::cout << "error, data not persistent: " << a[0] << " and: " << sizes[j] << std::endl;
+            for (int k = 0; k < sizes[j]; k++) {
+                if ((int)a[k] != j) {
+                    std::cout << "error, data not persistent: " << a[k] << " and: " << sizes[j] << std::endl;
+                }
             }
         }
         //deallocate the memory
@@ -94,9 +110,14 @@ long buddyScenario() {
             currentGlobalAllocator->dealloc(arr[j]);
         }
     }
-    //end timer and return
-    gettimeofday(&stop, NULL);
-    long diff = (stop.tv_usec - start.tv_usec) + 1000000 * (stop.tv_sec - start.tv_sec);
+    #ifdef __WIN32
+    clock_gettime(CLOCK_MONOTONIC, &ts_end);
+    diff = (ts_end.tv_sec - ts_start.tv_sec) * 1000000000 + (ts_end.tv_nsec - ts_start.tv_nsec);
+    #else
+    stop = mach_absolute_time();
+    diff = stop - start;
+    #endif
+
     return diff;
 }
 

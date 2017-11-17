@@ -20,7 +20,7 @@ AllocatorBase::AllocatorBase(StompFlag stompFlag) {
 #endif // ENABLE_STOMP
 
 AllocatorBase::~AllocatorBase() {
-    std::cout << "dtor AllocatorBase" << std::endl;
+    // std::cout << "dtor AllocatorBase" << std::endl;
 
     #ifdef ENABLE_STOMP
     if(mStompAllocator != this) {
