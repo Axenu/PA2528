@@ -17,24 +17,12 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
     _totalSize = blockSize; // in bytes
     _leaf_size = sizeof(BuddyHeader); // in bytes
     _origin = malloc(blockSize);
-    _num_levels = 32 - __builtin_clz(_totalSize/_leaf_size);
+    _num_levels = 32 - __builtin_clz((int)_totalSize/_leaf_size);
     int numberOfIndices = (1 << _num_levels);
-    int buddyAndSplitArraySize = numberOfIndices; // since every array requires half a bit per index.
+//    int buddyAndSplitArraySize = numberOfIndices; // since every array requires half a bit per index.
     int sizeOfArray = numberOfIndices >> 3; //bit to byte
     _buddyArray = (int *)_origin;
     _splitArray = (int *)((char *)_origin + sizeOfArray/2);
-
-    //calculate number of leafs required by array:
-    int numberOfBlocks = 1;
-    if (sizeOfArray > _leaf_size) {
-        numberOfBlocks = sizeOfArray / _leaf_size;
-    }
-
-    std::cout << "_total_size in bytes: " << _totalSize << std::endl;
-    std::cout << "_leaf_size in bytes: " << _leaf_size << std::endl;
-    std::cout << "number of levels: " << _num_levels << std::endl;
-    std::cout << "size of array in bytes: " << sizeOfArray << std::endl;
-    std::cout << "array requires number of leaf blocks: " << numberOfBlocks << std::endl;
 
     // set all memory to 0
     memset(_origin, '\0', blockSize);
@@ -50,9 +38,11 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
 }
 
 void *BuddyAllocator::getBlockAtLevel(int level) {
-    // std::cout << "getBlockAtLevel: " << level << std::endl;
+//     std::cout << "getBlockAtLevel: " << level << std::endl;
     //if the algorithm try to allocate something larger than the whole size
-    assert(level >= 0);
+    if (level < 0) {
+        return nullptr;
+    }
     //get block
     void *newBlock;
     if (_free_lists[level] == nullptr) { // no free blocks
@@ -112,7 +102,7 @@ BuddyAllocator::~BuddyAllocator() {
 
 void* BuddyAllocator::alloc_internal(size_t size) {
 
-    std::cout << "allocate of size: " << size << std::endl;
+    // std::cout << "allocate of size: " << size << std::endl;
 
     void * memory = getBlockAtLevel(nearestLevel(size));
     // memset()
@@ -120,17 +110,10 @@ void* BuddyAllocator::alloc_internal(size_t size) {
     return memory;
 }
 void BuddyAllocator::dealloc_internal(void *p) {
-    // free(p);
-    // std::cout << "level of dealloc: " << findLevel(p) << std::endl;
     int level = findLevel(p);
-    // std::cout << "levelOfDealloc: " << level << std::endl;
-    // int index = globa;
-    // std::cout << "index dealloc: " << index << std::endl;
 
     // check if buddy is free:
     if (getBit(_buddyArray, globalBuddyIndex(p, level)) == 1) { // only one of the blocks was allocated, and since this one was, the other is free
-        // std::cout << "merge!" << std::endl;
-    //     //merge:
         merge(p, level);
     } else {
         //add this block to free array at level
@@ -144,11 +127,11 @@ void BuddyAllocator::dealloc_internal(void *p) {
         bh->prev = nullptr;
         _free_lists[level] = p;
         setBit(_buddyArray, globalBuddyIndex(p, level));
+        //debug only:
     }
 }
 
-void BuddyAllocator::merge(void *p, int level) {
-    // std::cout << "merge: " << level << std::endl;
+void BuddyAllocator::merge(void *p, short level) {
 
     //might need to rewrite this chunk
     void *bptr; //should already be free. get its header
@@ -164,28 +147,31 @@ void BuddyAllocator::merge(void *p, int level) {
     }
 
     //remove buddy from _free_lists
+
     BuddyHeader *bh = (BuddyHeader *)bptr;
     BuddyHeader *bhPrev = (BuddyHeader *)bh->prev;
     BuddyHeader *bhNext = (BuddyHeader *)bh->next;
     if (bhPrev != nullptr) {
         bhPrev->next = bhNext;
+    } else {
+        _free_lists[level] = bh->next;
     }
     if (bhNext != nullptr) {
         bhNext->prev = bhPrev;
     }
     //add smallest of p and bptr to _free_lists[level+1]
     BuddyHeader *bhSmall = (BuddyHeader *)smallest;
-    bhSmall->next = _free_lists[level+1];
+    bhSmall->next = _free_lists[level-1];
     bhSmall->prev = nullptr;
-    _free_lists[level+1] = smallest;
+    _free_lists[level-1] = smallest;
     //unset split
-    int gi = globalSplitIndex(smallest, level-1);
+//    int gi = globalSplitIndex(smallest, level-1);
     // std::cout << gi << std::endl;
-    unsetBit(_splitArray, gi);
+    unsetBit(_splitArray, globalSplitIndex(smallest, level-1));
     //unset allocated
-    gi = globalBuddyIndex(smallest, level);
+//    gi = globalBuddyIndex(smallest, level);
     // std::cout << gi << std::endl;
-    unsetBit(_buddyArray, gi);
+    unsetBit(_buddyArray, globalBuddyIndex(smallest, level));
     //try if the next level can be merged:
     if (level > 1) {
         if (getBit(_buddyArray, globalBuddyIndex(smallest, level-1)) == 1) {
@@ -194,6 +180,7 @@ void BuddyAllocator::merge(void *p, int level) {
             setBit(_buddyArray, globalBuddyIndex(smallest, level-1));
         }
     }
+//    memset(smallest, 0, sizeOfLevel(level-1));
 }
 
 int BuddyAllocator::findLevel(void *p) {
@@ -208,24 +195,12 @@ int BuddyAllocator::findLevel(void *p) {
     return 0;
 }
 
-void *BuddyAllocator::buddyPointer(void *p, int n) {
-    int index = indexInLevelOf(p, n);
-    if (index % 2 == 0)
-        return pointerForIndex(index + 1, n);
-    else
-        return pointerForIndex(index - 1, n);
-}
 
-
-int BuddyAllocator::nearestLevel(size_t size) {
+int BuddyAllocator::nearestLevel(short size) {
     if (size < _leaf_size)
         size = _leaf_size;
-    int level = __builtin_clz (size - 1) - 29 + _num_levels;
+    short level = (short)__builtin_clz(size - 1) - 29 + _num_levels;
     return level;
-}
-
-size_t BuddyAllocator::nearestPowerOfTwo(size_t size) {
-    return 1 << (32 - __builtin_clz (size - 1));
 }
 
 //Debug
@@ -243,6 +218,10 @@ void BuddyAllocator::printMemory(int lines) {
             }
         }
         printf("\n");
+    }
+
+    for (int i = 0; i < _num_levels; ++i) {
+        printf("%p\n", _free_lists[i]);
     }
 }
 // buddy

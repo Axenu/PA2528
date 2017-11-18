@@ -1,3 +1,4 @@
+#ifdef __WIN32
 #include "StompScenarios.h"
 #include "StompAllocator.h"
 
@@ -222,3 +223,4 @@ void runStompScenarios()
 //    delete allocator;
     std::cout << __LINE__ << std::endl;
 }
+#endif

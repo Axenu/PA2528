@@ -8,9 +8,9 @@ static const size_t ALLOC_OFFSET_SIZE = sizeof(uint32_t);
 static_assert(ALLOC_OFFSET_SIZE == 4, "ALLOC_OFFSET_SIZE is the wrong size.");
 
 StackAllocator::StackAllocator(void* ptrStart, void* ptrEnd)
-{	
+{
 	std::cout << "ctor StackAllocator" << std::endl;
-	
+
 	m_ptrStart = ptrStart;
 	m_ptrEnd = ptrEnd;
 	m_ptrCurrent = ptrStart;
@@ -19,8 +19,8 @@ StackAllocator::StackAllocator(void* ptrStart, void* ptrEnd)
 StackAllocator::~StackAllocator()
 {
 	std::cout << "dtor PoolAllocator" << std::endl;
-		
-	
+
+
 }
 
 void* StackAllocator::alloc_internal(size_t size, size_t alignment, size_t offset)
@@ -32,7 +32,7 @@ void* StackAllocator::alloc_internal(size_t size, size_t alignment, size_t offse
 	size += ALLOC_OFFSET_SIZE;
 	offset += ALLOC_OFFSET_SIZE;
 
-	const uint32_t allocOffset = (uint32_t)m_ptrCurrent - (uint32_t)m_ptrStart;
+	// const uint32_t allocOffset = (uint32_t)m_ptrCurrent - (uint32_t)m_ptrStart;
 
 	// offset ptr, align, then offset
 	align(m_ptrCurrent, alignment); // m_ptrCurrent = align(m_ptrCurrent + offset, alignment) - offset;
@@ -63,6 +63,6 @@ void StackAllocator::align(void* ptr, size_t alignment)
 //void StackAllocator::free(void* ptr)
 //{
 //	// get alloc offset from the 4 bytes in the front of the allocation
-//	
-//	m_ptrCurrent = m_ptrStart + 
+//
+//	m_ptrCurrent = m_ptrStart +
 //}

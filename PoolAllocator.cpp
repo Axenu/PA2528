@@ -3,7 +3,7 @@
 #include "PoolAllocator.h"
 
 PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignment)
-	: numElements{ numElements }, allocatedElements{ 0 }, alignment{ alignment } {
+	: numElements(numElements), allocatedElements(0), alignment(alignment) {
 	// Ensure an element is at least the size of a pointer
 	// If element is smaller than alignment, use alignment size
 	this->elementSize = std::max(sizeof(void*), elementSize);

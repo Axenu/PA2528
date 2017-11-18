@@ -1,12 +1,10 @@
+#ifdef __WIN32
 
 #include "StompAllocator.h"
 
 #include <iostream>
 #include <cstdlib>
-
-#ifndef __WIN32
-#error Unsupported platform.
-#endif // __WIN32
+// #error Unsupported platform.
 
 #include <malloc.h>
 #include <windows.h>
@@ -283,3 +281,5 @@ void StompAllocator::dealloc_internal(void *p) {
 //    mFreeBlocks[mNumFreeBlocks] = b;
 //    mNumFreeBlocks++;
 }
+
+#endif // __WIN32

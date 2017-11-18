@@ -29,7 +29,7 @@ public:
     }
     template <typename T, typename... Args>
     T* alloc_arr(size_t size, Args... args) {
-        std::cout << "Alloc_arr with size: " << (sizeof(T)*size) << std::endl;
+        // std::cout << "Alloc_arr with size: " << (sizeof(T)*size) << std::endl;
         #ifdef ENABLE_STOMP
         T* memory = (T*)mStompAllocator->alloc_internal(sizeof(T)*size);
         #else

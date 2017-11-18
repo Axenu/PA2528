@@ -19,7 +19,7 @@ public:
 };
 
 template<typename T>
-static inline void PoolTester::scenario1(size_t numObjects, int alignment) {
+inline void PoolTester::scenario1(size_t numObjects, int alignment) {
 	std::cout << "Testing pool allocator vs OS with " << numObjects << " objects and alignment " << alignment << ". Released in arbitrary order\n";
 
 	// Test OS
@@ -68,7 +68,7 @@ static inline void PoolTester::scenario1(size_t numObjects, int alignment) {
 }
 
 template<typename T>
-static inline void PoolTester::scenario2(size_t numObjects, int alignment)
+inline void PoolTester::scenario2(size_t numObjects, int alignment)
 {
 	std::cout << "Testing pool allocator vs OS with " << numObjects << " objects and alignment " << alignment << ". Released in creation order.\n";
 
@@ -85,7 +85,7 @@ static inline void PoolTester::scenario2(size_t numObjects, int alignment)
 	for (size_t i = 0; i < numObjects; ++i) {
 		delete arr[i];
 	}
-	
+
 	// End timer
 	std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -106,7 +106,7 @@ static inline void PoolTester::scenario2(size_t numObjects, int alignment)
 	for (size_t i = 0; i < numObjects; ++i) {
 		pool->dealloc<T>(arr[i]);
 	}
-	
+
 	// End timer
 	end = std::chrono::high_resolution_clock::now();
 	duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();

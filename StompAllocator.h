@@ -1,3 +1,4 @@
+#ifdef __WIN32
 #ifndef __STOMP_ALLOCATOR__
 #define __STOMP_ALLOCATOR__
 
@@ -42,4 +43,5 @@ private:
     volatile bool mIsAllocating = false;
 };
 
+#endif
 #endif

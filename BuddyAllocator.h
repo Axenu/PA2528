@@ -28,58 +28,52 @@ private:
     size_t _totalSize;
     int _leaf_size;
     void *_origin;
-    int _num_levels;
+    short _num_levels;
     int *_buddyArray;
     int *_splitArray;
 
+    //inherited methods for allocating
     virtual void* alloc_internal(size_t size);
     virtual void dealloc_internal(void *p);
 
+    //allocate a block
+    int nearestLevel(short size);
     void *getBlockAtLevel(int level);
     void *split(void *, int level);
 
-    int nearestLevel(size_t size);
-    size_t nearestPowerOfTwo(size_t size);
-    int maxBlocksOfLevel(int n);
+    // deallocate a block
     int findLevel(void *p);
-    void *buddyPointer(void *p, int n);
-    void merge(void *p, int level);
+    void merge(void *p, short level);
 
+    //some bit array functions
     inline void setBit(int *A, int k) {
         A[k/32] |= (1 << (k%32));
-        // A[k] = 1;
     }
     inline void unsetBit(int *A, int k) {
         A[k/32] &= ~(1 << (k%32));
-        // A[k] = 0;
     }
-
     inline bool getBit(int *A, int k) {
         return ( (A[k/32] & (1 << (k%32) )) != 0 );
     }
 
+
     inline int indexInLevelOf(void *p, int n) {
-        return ((char *)p - (char *)_origin) / sizeOfLevel(n);
-    }
-    inline int globalBuddyIndex(void *p, int n) {
-        int levelSize = sizeOfLevel(n-1);
-        int index = ((char *)p - (char *)_origin) / (levelSize);
-        // std::cout << "p: " << p << " orig: " << _origin << " diff: " << ((char *)p - (char *)_origin) / (levelSize >> 3) << " levelsize: " << levelSize << std::endl;
-        index += (1 << (n-1)) - 1;
-        return index;
+        return (int)((char *)p - (char *)_origin) / sizeOfLevel(n);
     }
     inline int globalSplitIndex(void *p, int n) {
         int levelSize = sizeOfLevel(n);
-        int gi = ((char *)p - (char *)_origin) / levelSize;
+        int gi = (int)((char *)p - (char *)_origin) / levelSize;
         gi += (1 << (n)) - 1;
         return gi;
     }
-    inline int sizeOfLevel(int n) {
-        return _totalSize/(1<<n);
+    inline int globalBuddyIndex(void *p, int n) {
+        return globalSplitIndex(p, n-1);
     }
-
-    inline void *pointerForIndex(int index, int n) {
-        return index * sizeOfLevel(n) + (int *)_origin;
+    inline int sizeOfLevel(short n) {
+        return (int)_totalSize/(1<<n);
+    }
+    inline void *pointerForIndex(int index, short n) {
+        return index * sizeOfLevel(n) + (char *)_origin;
     }
 
 };
