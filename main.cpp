@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <cstring>
 #include <sys/time.h>
 
 #include "AllocatorBase.h"
