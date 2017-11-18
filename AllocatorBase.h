@@ -8,6 +8,21 @@
 
 class StompAllocator;
 
+#ifdef ENABLE_ALLOC_DEBUG
+#define ALLOC_DEBUG(t, args) std::cout << __FILE__ << " (" << __LINE__ << ") " << #t#args << " -- size " << sizeof(t) << std::endl
+#else
+#define ALLOC_DEBUG(t, args)
+#endif // ENABLE_ALLOC_DEBUG
+
+// Example usage:
+// DefaultAllocator allocator;
+// char a = allocator.ALLOC(char, ());
+// ...
+// Or:
+// DefaultAllocator allocator;
+// Foo a = allocator.ALLOC(Foo, (arg1, arg2, arg3));
+#define ALLOC(t, args) alloc<t>args; ALLOC_DEBUG(t, args);
+
 class AllocatorBase {
 public:
     AllocatorBase();
