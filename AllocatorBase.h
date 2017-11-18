@@ -6,9 +6,7 @@
 
 //#define ENABLE_STOMP
 
-#ifdef ENABLE_STOMP
 class StompAllocator;
-#endif // ENABLE_STOMP
 
 class AllocatorBase {
 public:
@@ -60,8 +58,8 @@ private:
 private:
     #ifdef ENABLE_STOMP
     AllocatorBase* mStompAllocator;
-    friend StompAllocator;
     #endif // ENABLE_STOMP
+    friend StompAllocator;
 };
 
 #endif
