@@ -36,7 +36,7 @@ private:
     static constexpr size_t M_NUM_THREADS = 1024;
     static constexpr size_t M_NUM_PAGES = 500000;
     static StompAllocator* mStompAllocators;
-    void** mDirtyGuardPages;
+    void* mDirtyGuardPages[M_NUM_PAGES];
     size_t mNumDirtyGuardPages = 0;
     void* mGuardPages[M_NUM_PAGES];
     size_t mNumGuardPages = 0;

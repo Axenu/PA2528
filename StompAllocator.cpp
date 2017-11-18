@@ -101,7 +101,6 @@ StompAllocator::StompAllocator(AllocatorBase& allocator, bool doCheckOverrun)
 , M_CHECK_OVERRUN(doCheckOverrun)
 , mAllocator(allocator)
 {
-    mDirtyGuardPages = alloc_arr<void*>(M_NUM_PAGES);
     static bool doOnce = []() {
 //        memset(mStompAllocators, 0, sizeof(mStompAllocators));
         mStompAllocators = 0;
@@ -114,7 +113,6 @@ StompAllocator::StompAllocator(AllocatorBase& allocator, bool doCheckOverrun)
 }
 
 StompAllocator::~StompAllocator() {
-    dealloc(mDirtyGuardPages);
     mStompAllocators = nullptr;
     for(size_t i = 0; i < mNumGuardPages; i++) {
         DWORD prevProtect;
