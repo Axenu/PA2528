@@ -34,13 +34,22 @@ private:
     Block* mFreeBlocks;
     size_t mNumFreeBlocks;
     static constexpr size_t M_NUM_THREADS = 1024;
-    static constexpr size_t M_NUM_PAGES = 500000;
+    static constexpr size_t M_NUM_PAGES = 10000;
     static StompAllocator* mStompAllocators;
     void* mDirtyGuardPages[M_NUM_PAGES];
     size_t mNumDirtyGuardPages = 0;
-    void* mGuardPages[M_NUM_PAGES];
-    size_t mNumGuardPages = 0;
     volatile bool mIsAllocating = false;
+    static size_t mNumInstances;
+
+    struct PageHolder {
+        PageHolder();
+        ~PageHolder();
+        StompAllocator* allocator;
+        char* minPage = (char*)-1;
+        char* maxPage = (char*)0;
+    };
+
+    static PageHolder mPageHolder;
 };
 
 #endif

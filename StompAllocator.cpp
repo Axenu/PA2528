@@ -8,6 +8,7 @@
 
 #include <malloc.h>
 #include <windows.h>
+//#define VirtualProtect(...) if(!VirtualProtect(__VA_ARGS__)) {std::cout << "VP fail: " << GetLastError() << " -- (" << __LINE__ << ") " << #__VA_ARGS__ << std::endl;}
 #include <cassert>
 bool aboooo = false;
 
@@ -20,31 +21,21 @@ const size_t StompAllocator::M_PAGE_SIZE = []() {
 char* StompAllocator::p166 = 0;
 
 StompAllocator* StompAllocator::mStompAllocators;
+size_t StompAllocator::mNumInstances = 0;
+StompAllocator::PageHolder StompAllocator::mPageHolder;
 
 bool StompAllocator::isAllocating() {
     assert(mStompAllocators);
-//    assert(GetCurrentThreadId() < M_NUM_THREADS);
-//    return mStompAllocators[GetCurrentThreadId()] != nullptr;
-//    return mStompAllocators != nullptr;
     return mStompAllocators->mIsAllocating;
 }
 
 void StompAllocator::toggleAllocating(bool flag) {
     mStompAllocators = this;
     mIsAllocating = flag;
-//    std::cout << GetCurrentThreadId() << std::endl;
-//    assert(GetCurrentThreadId() < M_NUM_THREADS);
-//    mStompAllocators[GetCurrentThreadId()] = flag ? this : nullptr;
-//    mStompAllocators = flag ? this : nullptr;
 }
 
 
 void StompAllocator::addDirtyGuardPage(void* p) {
-    if(!mStompAllocators) {
-        return;
-    }
-//    assert(GetCurrentThreadId() < M_NUM_THREADS);
-//    StompAllocator* allocator = mStompAllocators[GetCurrentThreadId()];
     StompAllocator* allocator = mStompAllocators;
     assert(allocator != nullptr);
     assert(allocator->mNumDirtyGuardPages < M_NUM_PAGES);
@@ -64,7 +55,7 @@ LONG CALLBACK guardPageHandler(PEXCEPTION_POINTERS ExceptionInfo) {
             DWORD prevProtect;
             VirtualProtect(ptr, 1, PAGE_NOACCESS, &prevProtect);
 
-//            std::cout << __FUNCTION__ << " " << size_t(ptr) << std::endl;
+            std::cout << __FUNCTION__ << " " << size_t(ptr) << std::endl;
 //            char b = *(char*)0;
 //            char a = *(char*)ptr; // I can't find a better way to actually retrigger the exception
 //            return EXCEPTION_CONTINUE_EXECUTION;
@@ -92,6 +83,7 @@ LONG CALLBACK guardPageHandler(PEXCEPTION_POINTERS ExceptionInfo) {
 }
 using namespace STOMP_ALLOCATOR_PRIVATE;
 
+
 StompAllocator::StompAllocator(AllocatorBase& allocator, bool doCheckOverrun)
 #ifdef ENABLE_STOMP
 : AllocatorBase(AllocatorBase::StompFlag())
@@ -101,23 +93,50 @@ StompAllocator::StompAllocator(AllocatorBase& allocator, bool doCheckOverrun)
 , M_CHECK_OVERRUN(doCheckOverrun)
 , mAllocator(allocator)
 {
-    static bool doOnce = []() {
-//        memset(mStompAllocators, 0, sizeof(mStompAllocators));
-        mStompAllocators = 0;
-        AddVectoredExceptionHandler(1, guardPageHandler);
-        threadId = GetCurrentThreadId();
-        return true;
-    }();
+    mNumInstances++;
+//    static bool doOnce = []() {
+////        memset(mStompAllocators, 0, sizeof(mStompAllocators));
+//        return true;
+//    }();
 //    mNumFreeBlocks = 0;
 //    mFreeBlocks = (Block*)alloc_internal(M_PAGE_SIZE * 100000);
 }
 
-StompAllocator::~StompAllocator() {
+StompAllocator::PageHolder::PageHolder() {
     mStompAllocators = nullptr;
-    for(size_t i = 0; i < mNumGuardPages; i++) {
+    AddVectoredExceptionHandler(1, guardPageHandler);
+    threadId = GetCurrentThreadId();
+
+
+    int a;
+    allocator = new StompAllocator(*(AllocatorBase*)&a, true);
+}
+
+StompAllocator::PageHolder::~PageHolder() {
+    for(char* p = (char*)minPage; p <= maxPage; p += M_PAGE_SIZE) {
         DWORD prevProtect;
-        VirtualProtect(mGuardPages[i], 1, PAGE_READWRITE, &prevProtect);
+        VirtualProtect(p, 1, PAGE_READWRITE, &prevProtect);
     }
+    delete allocator;
+}
+
+StompAllocator::~StompAllocator() {
+    mNumInstances--;
+    if(mNumInstances == 0) {
+        mStompAllocators = mPageHolder.allocator;
+//        mStompAllocators = nullptr;
+//        for(char* p = (char*)mPageHolder.minPage; p <= mPageHolder.maxPage; p += M_PAGE_SIZE) {
+//            DWORD prevProtect;
+//            bool success = VirtualProtect(p, 1, PAGE_READWRITE, &prevProtect);
+////            if(success && prevProtect != PAGE_READWRITE | PAGE_GUARD) {
+////                VirtualProtect(p, 1, prevProtect, &prevProtect);
+////            }
+//        }
+    }
+//    for(size_t i = 0; i < mNumGuardPages; i++) {
+//        DWORD prevProtect;
+//        VirtualProtect(mGuardPages[i], 1, PAGE_READWRITE, &prevProtect);
+//    }
 //    Block* freeBlocks = mFreeBlocks;
 //    Block b;
 //    mFreeBlocks = &b;
@@ -225,9 +244,16 @@ void StompAllocator::dealloc_internal(void *p) {
     mAllocator.dealloc_internal(block);
     toggleAllocating(false);
     for(char* page = block + alignmentOffset; page <= block + alignmentOffset + blockSize; page += M_PAGE_SIZE) {
-        assert(mNumGuardPages < M_NUM_PAGES);
-        mGuardPages[mNumGuardPages] = page;
-        mNumGuardPages++;
+//        assert(mNumGuardPages < M_NUM_PAGES);
+//        mGuardPages[mNumGuardPages] = page;
+//        mNumGuardPages++;
+
+        if(page < mPageHolder.minPage) {
+            mPageHolder.minPage = page;
+        }
+        else if(page > mPageHolder.maxPage) {
+            mPageHolder.maxPage = page;
+        }
     }
     size_t blockBeginPage = size_t(block) / M_PAGE_SIZE;
     size_t blockEndPage = size_t(block + blockSize) / M_PAGE_SIZE;
