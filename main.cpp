@@ -87,14 +87,17 @@ long buddyScenario() {
     uint64_t start, stop;
     start = mach_absolute_time();
     #endif
-
-    for (int i = 0; i < 1000; i++) {
+//    BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
+    for (int i = 0; i < 100; i++) {
+//        all->printMemory(8);
         //allocate the memory
         for (int j = 0; j < count; j++) {
             arr[j] = currentGlobalAllocator->alloc_arr<char>(sizes[j]);
         }
         //use the memory.
         for (int j = 0; j < count; j++) {
+            // std::cout << "location: " << arr[j] <<std::endl;
+//            printf("location: %p\n", arr[j]);
             memset(arr[j], j, sizes[j]);
         }
         //read the memory.
@@ -102,14 +105,16 @@ long buddyScenario() {
             char *a = arr[j];
             for (int k = 0; k < sizes[j]; k++) {
                 if ((int)a[k] != j) {
-                    std::cout << "error, data not persistent: " << a[k] << " and: " << sizes[j] << std::endl;
+                    std::cout << "error, data not persistent: " << a[k] << " and: " << j << std::endl;
                 }
             }
         }
         //deallocate the memory
-        for (int j = count-1; j >= 0; j--) {
+        for (int j = 0; j < count; j++) {
             currentGlobalAllocator->dealloc(arr[j]);
         }
+        // BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
+//        all->printMemory(8);
     }
     #ifdef __WIN32
     clock_gettime(CLOCK_MONOTONIC, &ts_end);
@@ -143,11 +148,12 @@ int main()
     // poolScenario();
     // clockFunction(poolScenario);
 
-    BuddyAllocator *buddy = new BuddyAllocator(1048576);
+     BuddyAllocator *buddy = new BuddyAllocator(1048576);
+//        BuddyAllocator *buddy = new BuddyAllocator(2048);
     currentGlobalAllocator = buddy;
     printf("Buddy allocator took %lu microseconds.\n", buddyScenario());
-    currentGlobalAllocator = &dAllocator;
-    printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
+     currentGlobalAllocator = &dAllocator;
+     printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
 
     // StackAllocator *stack = new StackAllocator(10,1024, 4);
     // currentGlobalAllocator = stack;
