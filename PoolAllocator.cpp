@@ -3,7 +3,7 @@
 #include "PoolAllocator.h"
 
 PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignment)
-	: numElements(numElements), allocatedElements(0), alignment(alignment) {
+	: allocatedElements(0) {
 	// Ensure an element is at least the size of a pointer
 	// If element is smaller than alignment, use alignment size
 	this->elementSize = std::max(sizeof(void*), elementSize);
@@ -69,7 +69,6 @@ void* PoolAllocator::alloc_internal(size_t size) {
 
 void PoolAllocator::dealloc_internal(void *p) {
 	uintptr_t deallocatedAddress = reinterpret_cast<uintptr_t>(p);
-	uintptr_t base = reinterpret_cast<uintptr_t>(basePointer);
 
 	//assert(deallocatedAddress >= base);
 	//assert((deallocatedAddress - base) % alignment == 0);

@@ -23,10 +23,7 @@ private:
 	void* firstFree;
 	void* lastFree;
 
-	int alignment;
-
 	size_t elementSize;
-	size_t numElements;
 
 	// Number of currently allocated elements
 	size_t allocatedElements;

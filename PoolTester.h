@@ -63,7 +63,7 @@ inline void PoolTester::scenario1(size_t numObjects, int alignment) {
 
 	std::cout << "PoolAllocator:\t" << duration << " microseconds\n";
 
-	delete arr;
+	delete[] arr;
 	delete pool;
 }
 
@@ -113,7 +113,7 @@ inline void PoolTester::scenario2(size_t numObjects, int alignment)
 
 	std::cout << "PoolAllocator:\t" << duration << " microseconds\n";
 
-	delete arr;
+	delete[] arr;
 	delete pool;
 }
 

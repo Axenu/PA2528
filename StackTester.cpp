@@ -4,7 +4,7 @@
 
 void bufferOverflowTest(AllocatorBase* currentGlobalAllocator)
 {
-	bool error;
+	bool error = false;
 
 	std::cout << "Running stack allocator buffer overflow test..." << std::endl;
 	/*
@@ -21,10 +21,10 @@ void bufferOverflowTest(AllocatorBase* currentGlobalAllocator)
 
 void bufferUnderflowTest(AllocatorBase* currentGlobalAllocator)
 {
-	bool error;
+	bool error = false;
 
 	std::cout << "Running StackAllocator buffer underflow test..." << std::endl;
-	
+
 	if (!currentGlobalAllocator->alloc<size_t>(-1))
 	{
 		error = true;

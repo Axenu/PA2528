@@ -22,5 +22,5 @@ void PoolTester::testCorrectness(size_t numObjects, int alignment) {
 	if (noError)
 		std::cout << "No errors detected.\n";
 
-	delete arr;
+	delete []arr;
 }
