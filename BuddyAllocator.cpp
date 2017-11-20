@@ -1,6 +1,19 @@
 #include "BuddyAllocator.h"
 #include <cstring>
 
+# if defined(__WIN32) || defined(WIN32) || defined(_WIN32)
+int __builtin_clz(int x) {
+	unsigned y;
+	int n = 32;
+	y = x >> 16;  if (y != 0) { n = n - 16;  x = y; }
+	y = x >> 8;  if (y != 0) { n = n - 8;  x = y; }
+	y = x >> 4;  if (y != 0) { n = n - 4;  x = y; }
+	y = x >> 2;  if (y != 0) { n = n - 2;  x = y; }
+	y = x >> 1;  if (y != 0) return n - 2;
+	return n - x;
+}
+#endif
+
 //init
 // blockSize: number of bytes to allocate
 // size of BuddyHeader = 16 byte.
@@ -15,17 +28,18 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
     }
 
     _totalSize = blockSize; // in bytes
-    _leaf_size = sizeof(BuddyHeader); // in bytes
+    _leaf_size = 16; // in bytes // something does not work if it is 8...
     _origin = malloc(blockSize);
     _num_levels = 32 - __builtin_clz((int)_totalSize/_leaf_size);
     int numberOfIndices = (1 << _num_levels);
+	//std::cout << "allocate of level: " << builtin_clz(12) << std::endl;
 //    int buddyAndSplitArraySize = numberOfIndices; // since every array requires half a bit per index.
     int sizeOfArray = numberOfIndices >> 3; //bit to byte
     _buddyArray = (int *)_origin;
     _splitArray = (int *)((char *)_origin + sizeOfArray/2);
 
     // set all memory to 0
-    memset(_origin, '\0', blockSize);
+    memset(_origin, 0, blockSize);
 
     //create first block of data of size _totalSize
     BuddyHeader *header = (BuddyHeader *)_origin;
@@ -104,7 +118,7 @@ BuddyAllocator::~BuddyAllocator() {
 
 void* BuddyAllocator::alloc_internal(size_t size) {
 
-    // std::cout << "allocate of level: " << nearestLevel(size) << std::endl;
+
 
     void * memory = getBlockAtLevel(nearestLevel(size));
     // memset()
@@ -149,7 +163,7 @@ void BuddyAllocator::merge(void *p, short level) {
         smallest = bptr;
     }
 //    printf("p: %p bptr: %p\n", p, bptr);
-    
+
 
     //remove buddy from _free_lists
 
@@ -200,7 +214,7 @@ void BuddyAllocator::merge(void *p, short level) {
             setBit(_buddyArray, globalBuddyIndex(smallest, level-1));
         }
     }
-    
+
    // memset(p, 0, sizeOfLevel(level-1));
 }
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
+#include <cstddef>
 
 #include "AllocatorBase.h"
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <assert.h>
+#include <stdio.h>
 
 #include "AllocatorBase.h"
 

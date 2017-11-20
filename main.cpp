@@ -2,14 +2,14 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
-#include <sys/time.h>
+#include <chrono>
 
 #include "AllocatorBase.h"
 #include "PoolAllocator.h"
 #include "BuddyAllocator.h"
 #include "DefaultAllocator.h"
 
-#ifndef __WIN32
+#if !defined(__WIN32) && !defined(WIN32) && !defined(_WIN32)
 //mac
 #include <CoreServices/CoreServices.h>
 #include <mach/mach.h>
@@ -69,7 +69,7 @@ void poolScenario() {
 }
 
 long buddyScenario() {
-    int count = 100;
+    const int count = 100;
     char *arr[count];
     int sizes[count];
     //create a set of sizes with sizes from 1 to 512 bytes.
@@ -79,17 +79,16 @@ long buddyScenario() {
     }
     long diff;
     //start timer
-    #ifdef __WIN32
-    struct timespec ts_start;
-    struct timespec ts_end;
-    clock_gettime(CLOCK_MONOTONIC, &ts_start);
+    #if defined(__WIN32) || defined(WIN32)  || defined(_WIN32)
+    	// Start timer
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     #else
     uint64_t start, stop;
     start = mach_absolute_time();
     #endif
-//    BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
+    BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
     for (int i = 0; i < 100; i++) {
-//        all->printMemory(8);
+        //all->printMemory(8);
         //allocate the memory
         for (int j = 0; j < count; j++) {
             arr[j] = currentGlobalAllocator->alloc_arr<char>(sizes[j]);
@@ -116,9 +115,9 @@ long buddyScenario() {
         // BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
 //        all->printMemory(8);
     }
-    #ifdef __WIN32
-    clock_gettime(CLOCK_MONOTONIC, &ts_end);
-    diff = (ts_end.tv_sec - ts_start.tv_sec) * 1000000000 + (ts_end.tv_nsec - ts_start.tv_nsec);
+#if defined(__WIN32) || defined(WIN32) || defined(_WIN32)
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+  	diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     #else
     stop = mach_absolute_time();
     diff = stop - start;
@@ -129,13 +128,14 @@ long buddyScenario() {
 
 long clockFunction(void (*func) ()) {
     //start timer
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
-    func();
-    //end timer and return
-    gettimeofday(&stop, NULL);
-    long diff = (stop.tv_usec - start.tv_usec) + 1000000 * (stop.tv_sec - start.tv_sec);
-    return diff;
+    //struct timeval stop, start;
+    //gettimeofday(&start, NULL);
+    //func();
+    ////end timer and return
+    //gettimeofday(&stop, NULL);
+    //long diff = (stop.tv_usec - start.tv_usec) + 1000000 * (stop.tv_sec - start.tv_sec);
+    //return diff;
+	return 1;
 }
 
 int main()
