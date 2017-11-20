@@ -86,7 +86,7 @@ long buddyScenario() {
     uint64_t start, stop;
     start = mach_absolute_time();
     #endif
-    BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
+    // BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
     for (int i = 0; i < 100; i++) {
         //all->printMemory(8);
         //allocate the memory

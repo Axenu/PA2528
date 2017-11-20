@@ -12,13 +12,18 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 	// allocate memory from the OS to the stack
 	std::cout << "allocating memory of size " << sizeStack * sizeof(size_t) << " for the stack allocator" << std::endl;
 	if (m_alignment > 0)
+	#if defined(__WIN32) || defined(WIN32)  || defined(_WIN32)
 		m_start = _aligned_malloc(sizeStack * sizeof(size_t), alignment);
+	#else
+		// m_start = aligned_alloc(alignment, sizeStack * sizeof(size_t));
+		posix_memalign(&m_start, alignment, sizeStack * sizeof(size_t));
+	#endif
 	else
 		m_start = malloc(sizeStack * sizeof(size_t));
 
 	// store a pointer to the end of the memory block
 	m_end = static_cast<char*>(m_start) + sizeStack * sizeof(size_t);
-	
+
 	// set the current "end" of the used memory as the start pointer
 	m_ptr_stack = m_start;
 }

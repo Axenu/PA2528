@@ -58,7 +58,7 @@ public:
     template <typename T>
     void dealloc(T *t) {
         // std::cout << file << ": " << row << std::endl;
-        t->~T();
+        // t->~T();
         #ifdef ENABLE_STOMP
         mStompAllocator->dealloc_internal(t);
         #else
