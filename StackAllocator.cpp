@@ -1,68 +1,70 @@
 #include "StackAllocator.h"
 
-/*
-Each allocation will generate an overhead of 4 bytes (sizeof(uint32_t))
-The overhead is stored in front of each allocation
-*/
-static const size_t ALLOC_OFFSET_SIZE = sizeof(uint32_t);
-static_assert(ALLOC_OFFSET_SIZE == 4, "ALLOC_OFFSET_SIZE is the wrong size.");
-
-StackAllocator::StackAllocator(void* ptrStart, void* ptrEnd)
+StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 {
 	std::cout << "ctor StackAllocator" << std::endl;
 
-	m_ptrStart = ptrStart;
-	m_ptrEnd = ptrEnd;
-	m_ptrCurrent = ptrStart;
+	m_offset = 1;
+
+	// store alignment
+	m_alignment = alignment;
+
+	// allocate memory from the OS to the stack
+	std::cout << "allocating memory of size " << sizeStack * sizeof(size_t) << " for the stack allocator" << std::endl;
+	if (m_alignment > 0)
+		m_start = _aligned_malloc(sizeStack * sizeof(size_t), alignment);
+	else
+		m_start = malloc(sizeStack * sizeof(size_t));
+
+	// store a pointer to the end of the memory block
+	m_end = static_cast<char*>(m_start) + sizeStack * sizeof(size_t);
+	
+	// set the current "end" of the used memory as the start pointer
+	m_ptr_stack = m_start;
 }
 
 StackAllocator::~StackAllocator()
 {
-	std::cout << "dtor PoolAllocator" << std::endl;
-
-
+	std::cout << "dtor StackAllocator" << std::endl;
+	free(m_start); // clear the stack
 }
 
-void* StackAllocator::alloc_internal(size_t size, size_t alignment, size_t offset)
+void* StackAllocator::alloc_internal(size_t size)
 {
+	std::cout << "allocating item of size: " << size << std::endl;
+	void* current_pointer;
 
-	std::cout << "allocate of size: " << size << " | alignment: " << alignment << " | offset: " << offset << std::endl;
+	current_pointer = m_ptr_stack;
 
-	// the alloc offset is stored in front of the allocation
-	size += ALLOC_OFFSET_SIZE;
-	offset += ALLOC_OFFSET_SIZE;
+	m_ptr_stack = static_cast<char*>(m_ptr_stack) + m_offset * sizeof(size_t);
+	//m_ptr_stack = static_cast<char*>(m_ptr_stack) + size * sizeof(size_t);
+	//m_ptr_stack = static_cast<char*>(m_ptr_stack) + OFFSET; ???
 
-	// const uint32_t allocOffset = (uint32_t)m_ptrCurrent - (uint32_t)m_ptrStart;
+	// add check for overflow
 
-	// offset ptr, align, then offset
-	align(m_ptrCurrent, alignment); // m_ptrCurrent = align(m_ptrCurrent + offset, alignment) - offset;
-
-	// check if out of memory
-	if ((size_t)m_ptrCurrent + size > (size_t)m_ptrEnd)
-	{
-		// oom
-		return nullptr;
-	}
-
-	// wip
-	return m_ptrCurrent;
+	return current_pointer;
 }
 
-void StackAllocator::dealloc_internal(void* p)
+void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
 {
-	std::cout << "dealloc StackAllocator" << std::endl;
-	free(p);
+	freeBlock();
 }
 
-void StackAllocator::align(void* ptr, size_t alignment)
+void StackAllocator::free(void* p)
 {
-	// alignment code
+	dealloc(p);
 }
 
-//When freeing the allocation grab the 4 bytes in front of the allocation and set the ptr to that.
-//void StackAllocator::free(void* ptr)
-//{
-//	// get alloc offset from the 4 bytes in the front of the allocation
-//
-//	m_ptrCurrent = m_ptrStart +
-//}
+void StackAllocator::freeBlock()
+{
+	dealloc(m_ptr_stack);
+	// move the m_ptr_stack back to the previous block
+	//m_ptr_stack = m_start + m_offset
+	// m_ptr_stack -= SIZE_OF_BLOCK ???
+	m_ptr_stack = static_cast<char*>(m_ptr_stack) - m_offset * sizeof(size_t);
+}
+
+void StackAllocator::reset()
+{
+	m_ptr_stack = m_start;
+}
