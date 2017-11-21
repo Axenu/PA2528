@@ -2,8 +2,16 @@
 
 #include "PoolAllocator.h"
 
+#ifdef ENABLE_STOMP
+#include "StompAllocator.h"
+#endif // ENABLE_STOMP
+
 PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignment)
 	: allocatedElements(0) {
+
+    #ifdef ENABLE_STOMP
+    elementSize = StompAllocator::getAllocSize(elementSize);
+    #endif // ENABLE_STOMP
 	// Ensure an element is at least the size of a pointer
 	// If element is smaller than alignment, use alignment size
 	this->elementSize = std::max(sizeof(void*), elementSize);

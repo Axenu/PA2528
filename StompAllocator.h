@@ -14,6 +14,7 @@ public:
     static bool isAllocating();
     static void addDirtyGuardPage(void* p);
     static bool isActive();
+    static size_t getAllocSize(size_t size);
 
 private:
     virtual void* alloc_internal(size_t size);
