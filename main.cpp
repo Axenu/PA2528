@@ -7,8 +7,10 @@
 #include "AllocatorBase.h"
 #include "PoolAllocator.h"
 #include "BuddyAllocator.h"
+#include "StackAllocator.h"
 #include "DefaultAllocator.h"
 #include "PoolTester.h"
+#include "StackTester.h"
 
 #if !defined(__WIN32) && !defined(WIN32) && !defined(_WIN32)
 //mac
@@ -97,6 +99,11 @@ void poolScenario() {
 	std::getchar();
 }
 
+void stackScenario()
+{
+	std::cout << "Stack test:\n";
+}
+
 long buddyScenario() {
     const int count = 100;
     char *arr[count];
@@ -180,12 +187,17 @@ int main()
      currentGlobalAllocator = &dAllocator;
      printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
 
-    // StackAllocator *stack = new StackAllocator(10,1024, 4);
-    // currentGlobalAllocator = stack;
+  //   StackAllocator *stack = new StackAllocator(1024, 0);
+	 //currentGlobalAllocator = stack;
+
+	 //size_t stackSize = stack->getSizeOfMemory();
+	 //std::cout << "Stack size: " << stackSize <<std::endl;
 
     delete buddy;
+	//delete stack;
 
 	//poolScenario();
+	//stackScenario();
 
     return 0;
 }
