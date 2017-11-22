@@ -103,7 +103,14 @@ void poolScenario(size_t numObjects = 1000000) {
 
 void stackScenario()
 {
-	std::cout << "Stack test:\n";
+	std::cout << "Stack allocator time tests:" << std::endl;
+	StackTester::timeTest(1024, 1000);
+
+	std::cout << "Stack allocator overflow tests:" << std::endl;
+	StackTester::overflowTest();
+
+	std::cout << "Stack allocator underflow tests:" << std::endl;
+	StackTester::underflowTest();
 }
 
 long buddyScenario() {
@@ -232,13 +239,15 @@ int main()
      currentGlobalAllocator = &dAllocator;
      printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
 
-  //   StackAllocator *stack = new StackAllocator(1024, 0);
-	 //currentGlobalAllocator = stack;
-
-	 //size_t stackSize = stack->getSizeOfMemory();
-	 //std::cout << "Stack size: " << stackSize <<std::endl;
-
     delete buddy;
+
+	//StackAllocator *stack = new StackAllocator(1024);		// non-aligned
+	//   //StackAllocator *stack = new StackAllocator(1024, 0);  // custom alignment defined by user
+	//currentGlobalAllocator = stack;
+
+	//size_t stackSize = stack->getSizeOfMemory();
+	//std::cout << "Stack size: " << stackSize <<std::endl;
+
 	//delete stack;
 
 	//poolScenario();
