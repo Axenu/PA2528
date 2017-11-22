@@ -8,7 +8,7 @@ AllocatorBase::AllocatorBase() {
     // std::cout << "ctor AllocatorBase" << std::endl;
 
     #ifdef ENABLE_STOMP
-    mStompAllocator = new StompAllocator(*this, true);
+    mStompAllocator = new StompAllocator(*this, ENABLE_STOMP);
     #endif // ENABLE_STOMP
 }
 
