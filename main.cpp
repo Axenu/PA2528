@@ -74,8 +74,8 @@ long buddyScenario() {
     int sizes[count];
     //create a set of sizes with sizes from 1 to 512 bytes.
     for (int i = 0; i < count; i++) {
-        sizes[i] = 1 << ((i%10));
-//        std::cout << "size: " << sizes[i] << std::endl;
+        sizes[i] = (1 << ((i%10))) * 100;
+//       std::cout << "size: " << sizes[i] << std::endl;
     }
     long diff;
     //start timer
@@ -87,7 +87,7 @@ long buddyScenario() {
     start = mach_absolute_time();
     #endif
     // BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1; i++) {
         //all->printMemory(8);
         //allocate the memory
         for (int j = 0; j < count; j++) {
@@ -96,17 +96,17 @@ long buddyScenario() {
         //use the memory.
         for (int j = 0; j < count; j++) {
             // std::cout << "location: " << arr[j] <<std::endl;
-//            printf("location: %p\n", arr[j]);
             memset(arr[j], j, sizes[j]);
         }
         //read the memory.
         for (int j = 0; j < count; j++) {
             char *a = arr[j];
-            for (int k = 0; k < sizes[j]; k++) {
-                if ((int)a[k] != j) {
-                    std::cout << "error, data not persistent: " << a[k] << " and: " << j << std::endl;
-                }
-            }
+             for (int k = 0; k < sizes[j]; k++) {
+                 if ((int)a[0] != j) {
+                     std::cout << "error, data not persistent: " << a[0] << " and: " << j << std::endl;
+                     break;
+                 }
+             }
         }
         //deallocate the memory
         for (int j = 0; j < count; j++) {
@@ -148,7 +148,7 @@ int main()
     // poolScenario();
     // clockFunction(poolScenario);
 
-     BuddyAllocator *buddy = new BuddyAllocator(1048576);
+     BuddyAllocator *buddy = new BuddyAllocator(4096 << 12);
 //        BuddyAllocator *buddy = new BuddyAllocator(2048);
     currentGlobalAllocator = buddy;
     printf("Buddy allocator took %lu microseconds.\n", buddyScenario());

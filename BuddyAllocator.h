@@ -32,13 +32,14 @@ private:
     short _num_levels;
     int *_buddyArray;
     int *_splitArray;
+    int _allocated_size;
 
     //inherited methods for allocating
     virtual void* alloc_internal(size_t size);
     virtual void dealloc_internal(void *p);
 
     //allocate a block
-    int nearestLevel(short size);
+    int nearestLevel(int size);
     void *getBlockAtLevel(int level);
     void *split(void *, int level);
 

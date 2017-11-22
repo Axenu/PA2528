@@ -37,6 +37,7 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
     int sizeOfArray = numberOfIndices >> 3; //bit to byte
     _buddyArray = (int *)_origin;
     _splitArray = (int *)((char *)_origin + sizeOfArray/2);
+    _allocated_size = 0;
 
     // set all memory to 0
     memset(_origin, 0, blockSize);
@@ -46,6 +47,7 @@ BuddyAllocator::BuddyAllocator(size_t blockSize) {
     header->next = nullptr;
     header->prev = nullptr;
     _free_lists[0] = _origin;
+//    std::cout << nearestLevel(51200) << std::endl;
 
     // allocate the leafblocks required by array //alloc_internal can be used since the numberOfInitialblocks is always a power of two
     alloc_internal(sizeOfArray);
@@ -62,6 +64,8 @@ void *BuddyAllocator::getBlockAtLevel(int level) {
     void *newBlock;
     if (_free_lists[level] == nullptr) { // no free blocks
         void *largeBlock = getBlockAtLevel(level-1);
+		if (largeBlock == nullptr)
+			return nullptr;
         newBlock = split(largeBlock, level);
         // printMemory();
     } else {
@@ -118,8 +122,11 @@ BuddyAllocator::~BuddyAllocator() {
 
 void* BuddyAllocator::alloc_internal(size_t size) {
 
-
-
+    int a_size = sizeOfLevel(nearestLevel(size));
+    if (a_size + _allocated_size > _totalSize) {
+        return nullptr;
+    }
+    _allocated_size += a_size;
     void * memory = getBlockAtLevel(nearestLevel(size));
     // memset()
 
@@ -127,6 +134,9 @@ void* BuddyAllocator::alloc_internal(size_t size) {
 }
 void BuddyAllocator::dealloc_internal(void *p) {
     int level = findLevel(p);
+    //decrease size;
+    int a_size = sizeOfLevel(level);
+    _allocated_size -= a_size;
 //     std::cout << "dealloc level: " << level << std::endl;
     // check if buddy is free:
     if (getBit(_buddyArray, globalBuddyIndex(p, level)) == 1) { // only one of the blocks was allocated, and since this one was, the other is free
@@ -231,7 +241,7 @@ int BuddyAllocator::findLevel(void *p) {
 }
 
 
-int BuddyAllocator::nearestLevel(short size) {
+int BuddyAllocator::nearestLevel(int size) {
     if (size < _leaf_size)
         size = _leaf_size;
     short level = (short)__builtin_clz(size - 1) - 29 + _num_levels;
