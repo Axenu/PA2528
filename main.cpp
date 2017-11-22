@@ -8,6 +8,7 @@
 #include "PoolAllocator.h"
 #include "BuddyAllocator.h"
 #include "DefaultAllocator.h"
+#include "PoolTester.h"
 
 #if !defined(__WIN32) && !defined(WIN32) && !defined(_WIN32)
 //mac
@@ -54,18 +55,46 @@ struct B {
     }
 };
 
+struct C {
+	float f;
+	double d;
+	int i;
+	char c;
+
+	C() {
+		f = 2.0f;
+		d = 4.0;
+		i = 6;
+		c = 8;
+	}
+};
+
 void poolScenario() {
-    for(size_t i = 0; i < 1; i++) {
-        A *a = currentGlobalAllocator->alloc<A>(10);
-        A *b = currentGlobalAllocator->alloc<A>(12);
-        // A *a = ALLOC(A, 10);
-        // A *b = ALLOC(A, 20);
-        // A *a = new(memory) A(12);
-        // DEALLOC(a);
-        // DEALLOC(b);
-        currentGlobalAllocator->dealloc(a);
-        currentGlobalAllocator->dealloc(b);
-    }
+	std::cout << "Testing int:\n";
+	PoolTester::scenario1<int>(1000000, 1);
+	PoolTester::scenario1<int>(1000000, 4);
+	PoolTester::scenario1<int>(1000000, 8);
+	PoolTester::scenario1<int>(1000000, 16);
+
+	PoolTester::scenario2<int>(1000000, 1);
+	PoolTester::scenario2<int>(1000000, 4);
+	PoolTester::scenario2<int>(1000000, 8);
+	PoolTester::scenario2<int>(1000000, 16);
+
+	std::cout << "\n\nTesting struct C:\n";
+	PoolTester::scenario1<C>(1000000, 1);
+	PoolTester::scenario1<C>(1000000, 4);
+	PoolTester::scenario1<C>(1000000, 8);
+	PoolTester::scenario1<C>(1000000, 16);
+	PoolTester::scenario1<C>(1000000, 32);
+						  
+	PoolTester::scenario2<C>(1000000, 1);
+	PoolTester::scenario2<C>(1000000, 4);
+	PoolTester::scenario2<C>(1000000, 8);
+	PoolTester::scenario2<C>(1000000, 16);
+	PoolTester::scenario2<C>(1000000, 32);
+
+	std::getchar();
 }
 
 long buddyScenario() {
@@ -142,11 +171,7 @@ int main()
 {
 
     DefaultAllocator dAllocator = DefaultAllocator();
-    // PoolAllocator *pool = new PoolAllocator(sizeof(int), 4, 4);
-    // currentGlobalAllocator = pool;
 
-    // poolScenario();
-    // clockFunction(poolScenario);
 
      BuddyAllocator *buddy = new BuddyAllocator(4096 << 12);
 //        BuddyAllocator *buddy = new BuddyAllocator(2048);
@@ -157,9 +182,10 @@ int main()
 
     // StackAllocator *stack = new StackAllocator(10,1024, 4);
     // currentGlobalAllocator = stack;
-    // poolScenario();
 
     delete buddy;
-    // delete pool;
+
+	//poolScenario();
+
     return 0;
 }
