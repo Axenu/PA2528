@@ -2,6 +2,7 @@
 #include "StompScenarios.h"
 #include "StompAllocator.h"
 #include "DefaultAllocator.h"
+#include "BuddyAllocator.h"
 
 #include <windows.h>
 #include <signal.h>
@@ -164,23 +165,36 @@ void stompAccessFreedFailScenario(AllocatorBase* currentGlobalAllocator) {
     PRINT_PASS;
 }
 
+long buddyScenario();
+extern AllocatorBase* currentGlobalAllocator;
 void runStompScenarios()
 {
-    DefaultAllocator allocator;
-    {
-        std::cout << "Running StompAllocator overrun tests..." << std::endl;
-        StompAllocator overrun(allocator, true);
-        stompAccessFreedFailScenario(&overrun);
-        stompPassScenario(&overrun);
-        stompOverrunFailScenario(&overrun);
-    }
+//    {
+//        DefaultAllocator allocator;
+//        {
+//            std::cout << "Running StompAllocator overrun tests..." << std::endl;
+//            StompAllocator overrun(allocator, true);
+//            stompAccessFreedFailScenario(&overrun);
+//            stompPassScenario(&overrun);
+//            stompOverrunFailScenario(&overrun);
+//        }
+//
+//        {
+//            std::cout << "Running StompAllocator underrun tests..." << std::endl;
+//            StompAllocator underrun(allocator, false);
+//            stompAccessFreedFailScenario(&underrun);
+//            stompPassScenario(&underrun);
+//            stompUnderrunFailScenario(&underrun);
+//        }
+//    }
 
     {
-        std::cout << "Running StompAllocator underrun tests..." << std::endl;
-        StompAllocator underrun(allocator, false);
-        stompAccessFreedFailScenario(&underrun);
-        stompPassScenario(&underrun);
-        stompUnderrunFailScenario(&underrun);
+        std::cout << "Running StompAllocator-BuddyAllocator overrun test..." << std::endl;
+        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+        StompAllocator stomp(allocator, true);
+
+        currentGlobalAllocator = &stomp;
+        buddyScenario();
     }
 }
 #endif

@@ -98,6 +98,13 @@ void StompAllocator::addDirtyGuardPage(void* p) {
     allocator->mNumDirtyGuardPages++;
 }
 
+size_t StompAllocator::getAllocSize(size_t size) {
+    size += sizeof(BlockSize) * 2;
+    size_t distanceToPageBoundary = (M_PAGE_SIZE - size % M_PAGE_SIZE) % M_PAGE_SIZE;
+    return size + M_PAGE_SIZE * 2 + distanceToPageBoundary;
+}
+
+
 void* StompAllocator::alloc_internal(size_t size) {
     if(M_CHECK_OVERRUN) {
         size += sizeof(BlockSize) * 2;
