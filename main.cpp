@@ -11,6 +11,8 @@
 #include "DefaultAllocator.h"
 #include "PoolTester.h"
 #include "StackTester.h"
+#include "StompAllocator.h"
+#include "StompScenarios.h"
 
 #if !defined(__WIN32) && !defined(WIN32) && !defined(_WIN32)
 //mac
@@ -71,30 +73,30 @@ struct C {
 	}
 };
 
-void poolScenario() {
+void poolScenario(size_t numObjects = 1000000) {
 	std::cout << "Testing int:\n";
-	PoolTester::scenario1<int>(1000000, 1);
-	PoolTester::scenario1<int>(1000000, 4);
-	PoolTester::scenario1<int>(1000000, 8);
-	PoolTester::scenario1<int>(1000000, 16);
+	PoolTester::scenario1<int>(numObjects, 1);
+	PoolTester::scenario1<int>(numObjects, 4);
+	PoolTester::scenario1<int>(numObjects, 8);
+	PoolTester::scenario1<int>(numObjects, 16);
 
-	PoolTester::scenario2<int>(1000000, 1);
-	PoolTester::scenario2<int>(1000000, 4);
-	PoolTester::scenario2<int>(1000000, 8);
-	PoolTester::scenario2<int>(1000000, 16);
+	PoolTester::scenario2<int>(numObjects, 1);
+	PoolTester::scenario2<int>(numObjects, 4);
+	PoolTester::scenario2<int>(numObjects, 8);
+	PoolTester::scenario2<int>(numObjects, 16);
 
 	std::cout << "\n\nTesting struct C:\n";
-	PoolTester::scenario1<C>(1000000, 1);
-	PoolTester::scenario1<C>(1000000, 4);
-	PoolTester::scenario1<C>(1000000, 8);
-	PoolTester::scenario1<C>(1000000, 16);
-	PoolTester::scenario1<C>(1000000, 32);
-						  
-	PoolTester::scenario2<C>(1000000, 1);
-	PoolTester::scenario2<C>(1000000, 4);
-	PoolTester::scenario2<C>(1000000, 8);
-	PoolTester::scenario2<C>(1000000, 16);
-	PoolTester::scenario2<C>(1000000, 32);
+	PoolTester::scenario1<C>(numObjects, 1);
+	PoolTester::scenario1<C>(numObjects, 4);
+	PoolTester::scenario1<C>(numObjects, 8);
+	PoolTester::scenario1<C>(numObjects, 16);
+	PoolTester::scenario1<C>(numObjects, 32);
+
+	PoolTester::scenario2<C>(numObjects, 1);
+	PoolTester::scenario2<C>(numObjects, 4);
+	PoolTester::scenario2<C>(numObjects, 8);
+	PoolTester::scenario2<C>(numObjects, 16);
+	PoolTester::scenario2<C>(numObjects, 32);
 
 	std::getchar();
 }
@@ -160,6 +162,49 @@ long buddyScenario() {
     #endif
 
     return diff;
+}
+
+
+void runStompScenarios()
+{
+    #ifndef ENABLE_STOMP
+    std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
+    return;
+    #endif // ENABLE_STOMP
+
+
+    std::string checkStr;
+    #if ENABLE_STOMP == true
+    checkStr = "overrun";
+    {
+        std::cout << "Running StompAllocator overrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompOverrunFailScenario(&allocator);
+    }
+    #elif ENABLE_STOMP == false
+    checkStr = "underrun";
+    {
+        std::cout << "Running StompAllocator underrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompUnderrunFailScenario(&allocator);
+    }
+    #else
+    #error Invalid ENABLE_STOMP value
+    #endif // ENABLE_STOMP
+
+    {
+        std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
+        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+        currentGlobalAllocator = &allocator;
+        buddyScenario();
+    }
+
+    std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
+    poolScenario(10000);
 }
 
 long clockFunction(void (*func) ()) {
