@@ -7,9 +7,17 @@ void bufferOverflowTest(AllocatorBase* currentGlobalAllocator)
 	bool error = false;
 
 	std::cout << "Running stack allocator buffer overflow test..." << std::endl;
-	/*
-		code
-	*/
+	
+	//test code
+	size_t a, b;
+
+	size_t result = a + b;
+	if (result < a) // overflow
+	{
+		error = true;
+	}
+	//
+
 	if (error)
 	{
 		std::cout << "Stack overflow test encountered errors!\n";

@@ -14,11 +14,11 @@
 class StackAllocator : public AllocatorBase{
 public:
 	// StackAllocator(size_t size, void* start)
-	StackAllocator(size_t sizeStack, size_t alignment); // pointer to start of the stack, size of the stack, and alignment in the memory
+	StackAllocator(size_t sizeStack, size_t alignment); // size of the stack, and alignment in the memory
 	~StackAllocator();
 
 	void* getCurrentHead() { return m_ptr_stack; };		// returns the current "head" of the stack
-	size_t getSizeOfMemory() { return m_sizeStack; };	// used when checking for overflow
+	size_t getSizeOfMemory();	// used when checking for overflow
 
 private:
 	// alloc_internal (size_t size, size_t allignment, size_t offset) ?
