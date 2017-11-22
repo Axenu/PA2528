@@ -11,13 +11,15 @@
 //static const size_t ALLOCATION_OFFSET = sizeof(uint32_t);
 //static const size_t COUNT_OFFSET = sizeof(uint32_t);
 
+// struct for keeping track of prev block heads?
+
 class StackAllocator : public AllocatorBase{
 public:
 	// StackAllocator(size_t size, void* start)
 	StackAllocator(size_t sizeStack, size_t alignment); // size of the stack, and alignment in the memory
 	~StackAllocator();
 
-	void* getCurrentHead() { return m_ptr_stack; };		// returns the current "head" of the stack
+	void* getCurrentHead() { return m_ptr_head; };		// returns the current "head" of the stack
 	size_t getSizeOfMemory();	// used when checking for overflow
 
 private:
@@ -41,7 +43,7 @@ private:
 	// use template <typename T> (T* m_start ... etc) instead of char* ?
 	void* m_start;			// points at the start of the memory block
 	void* m_end;			// points at the upper bound (end) of the memory block
-	void* m_ptr_stack;		// points at the start + the current offset amount
+	void* m_ptr_head;		// points at the current head of the stack (start + the current offset)
 };
 
 #endif
