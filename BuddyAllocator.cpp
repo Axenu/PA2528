@@ -166,14 +166,12 @@ void BuddyAllocator::merge(void *p, short level) {
     int index = indexInLevelOf(p, level);
     if (index % 2 == 0) {
         // std::cout << "larger buddy" << std::endl;
-        bptr = pointerForIndex(index + 1, level);
+        bptr = pointerForIndex(index + 1, level); // TODO? Can be improved. p + size or p - size
         smallest = p;
     } else {
         bptr = pointerForIndex(index - 1, level);
         smallest = bptr;
     }
-//    printf("p: %p bptr: %p\n", p, bptr);
-
 
     //remove buddy from _free_lists
 
@@ -188,24 +186,9 @@ void BuddyAllocator::merge(void *p, short level) {
     if (bhNext != nullptr) {
         bhNext->prev = bhPrev;
     }
-    //remove p from list if in a list. maybe?
-//    BuddyHeader *p_header = (BuddyHeader *)p;
-//    if (p_header->next != nullptr || p_header->prev != nullptr) { // since header is not null, assume it is in a list.
-//        if (p_header->prev == nullptr) { // p_header is first in a list. Point list to p_header->next
-//            _free_lists[level] = p_header->next;
-//        }
-//        if (p_header->next != nullptr) {
-//            BuddyHeader *next_header = (BuddyHeader *)p_header->next;
-//            next_header->prev = p_header->prev;
-//        }
-//    }
-    //unset split
-//    int gi = globalSplitIndex(smallest, level-1);
-    // std::cout << gi << std::endl;
+
     unsetBit(_splitArray, globalSplitIndex(smallest, level-1));
     //unset allocated
-//    gi = globalBuddyIndex(smallest, level);
-    // std::cout << gi << std::endl;
     unsetBit(_buddyArray, globalBuddyIndex(smallest, level));
     //try if the next level can be merged:
     if (level > 1) {

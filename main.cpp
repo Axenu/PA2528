@@ -69,7 +69,7 @@ void poolScenario() {
 }
 
 long buddyScenario() {
-    const int count = 100;
+    const int count = 1000;
     char *arr[count];
     int sizes[count];
     //create a set of sizes with sizes from 1 to 512 bytes.
@@ -95,21 +95,20 @@ long buddyScenario() {
         }
         //use the memory.
         for (int j = 0; j < count; j++) {
-            // std::cout << "location: " << arr[j] <<std::endl;
-            memset(arr[j], j, sizes[j]);
+            memset(arr[j], j%256, sizes[j]);
         }
         //read the memory.
         for (int j = 0; j < count; j++) {
             char *a = arr[j];
              for (int k = 0; k < sizes[j]; k++) {
-                 if ((int)a[0] != j) {
-                     std::cout << "error, data not persistent: " << a[0] << " and: " << j << std::endl;
+                 if ((char)a[k] != (char)(j%256)) {
+                     std::cout << "error, data not persistent: " << (int)(char)a[k] << " and: " << j%256 << std::endl;
                      break;
                  }
              }
         }
         //deallocate the memory
-        for (int j = 0; j < count; j++) {
+        for (int j = count-1; j >= 0; j--) {
             currentGlobalAllocator->dealloc(arr[j]);
         }
         // BuddyAllocator *all = (BuddyAllocator *) currentGlobalAllocator;
