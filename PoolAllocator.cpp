@@ -16,6 +16,8 @@ PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignme
 	// If element is smaller than alignment, use alignment size
 	this->elementSize = std::max(sizeof(void*), elementSize);
 	this->elementSize = std::max(static_cast<size_t>(alignment), this->elementSize);
+	if (this->elementSize % alignment != 0)
+		this->elementSize += this->elementSize % alignment;
 
 	// Get memory from OS
 	uintptr_t rawPointer = reinterpret_cast<uintptr_t>(malloc(this->elementSize * numElements + alignment));

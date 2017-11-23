@@ -7,7 +7,12 @@
 #include "AllocatorBase.h"
 #include "PoolAllocator.h"
 #include "BuddyAllocator.h"
+#include "StackAllocator.h"
 #include "DefaultAllocator.h"
+#include "PoolTester.h"
+#include "StackTester.h"
+#include "StompAllocator.h"
+#include "StompScenarios.h"
 
 #if !defined(__WIN32) && !defined(WIN32) && !defined(_WIN32)
 //mac
@@ -54,18 +59,58 @@ struct B {
     }
 };
 
-void poolScenario() {
-    for(size_t i = 0; i < 1; i++) {
-        A *a = currentGlobalAllocator->alloc<A>(10);
-        A *b = currentGlobalAllocator->alloc<A>(12);
-        // A *a = ALLOC(A, 10);
-        // A *b = ALLOC(A, 20);
-        // A *a = new(memory) A(12);
-        // DEALLOC(a);
-        // DEALLOC(b);
-        currentGlobalAllocator->dealloc(a);
-        currentGlobalAllocator->dealloc(b);
-    }
+struct C {
+	float f;
+	double d;
+	int i;
+	char c;
+
+	C() {
+		f = 2.0f;
+		d = 4.0;
+		i = 6;
+		c = 8;
+	}
+};
+
+void poolScenario(size_t numObjects = 1000000) {
+	std::cout << "Testing int:\n";
+	PoolTester::scenario1<int>(numObjects, 1);
+	PoolTester::scenario1<int>(numObjects, 4);
+	PoolTester::scenario1<int>(numObjects, 8);
+	PoolTester::scenario1<int>(numObjects, 16);
+
+	PoolTester::scenario2<int>(numObjects, 1);
+	PoolTester::scenario2<int>(numObjects, 4);
+	PoolTester::scenario2<int>(numObjects, 8);
+	PoolTester::scenario2<int>(numObjects, 16);
+
+	std::cout << "\n\nTesting struct C:\n";
+	PoolTester::scenario1<C>(numObjects, 1);
+	PoolTester::scenario1<C>(numObjects, 4);
+	PoolTester::scenario1<C>(numObjects, 8);
+	PoolTester::scenario1<C>(numObjects, 16);
+	PoolTester::scenario1<C>(numObjects, 32);
+
+	PoolTester::scenario2<C>(numObjects, 1);
+	PoolTester::scenario2<C>(numObjects, 4);
+	PoolTester::scenario2<C>(numObjects, 8);
+	PoolTester::scenario2<C>(numObjects, 16);
+	PoolTester::scenario2<C>(numObjects, 32);
+
+	std::getchar();
+}
+
+void stackScenario()
+{
+	std::cout << "Stack allocator time tests:" << std::endl;
+	StackTester::timeTest(1024, 1000);
+
+	std::cout << "Stack allocator overflow tests:" << std::endl;
+	StackTester::overflowTest();
+
+	std::cout << "Stack allocator underflow tests:" << std::endl;
+	StackTester::underflowTest();
 }
 
 long buddyScenario() {
@@ -125,6 +170,49 @@ long buddyScenario() {
     return diff;
 }
 
+
+void runStompScenarios()
+{
+    #ifndef ENABLE_STOMP
+    std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
+    return;
+    #endif // ENABLE_STOMP
+
+
+    std::string checkStr;
+    #if ENABLE_STOMP == true
+    checkStr = "overrun";
+    {
+        std::cout << "Running StompAllocator overrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompOverrunFailScenario(&allocator);
+    }
+    #elif ENABLE_STOMP == false
+    checkStr = "underrun";
+    {
+        std::cout << "Running StompAllocator underrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompUnderrunFailScenario(&allocator);
+    }
+    #else
+    #error Invalid ENABLE_STOMP value
+    #endif // ENABLE_STOMP
+
+    {
+        std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
+        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+        currentGlobalAllocator = &allocator;
+        buddyScenario();
+    }
+
+    std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
+    poolScenario(10000);
+}
+
 long clockFunction(void (*func) ()) {
     //start timer
     //struct timeval stop, start;
@@ -141,11 +229,7 @@ int main()
 {
 
     DefaultAllocator dAllocator = DefaultAllocator();
-    // PoolAllocator *pool = new PoolAllocator(sizeof(int), 4, 4);
-    // currentGlobalAllocator = pool;
 
-    // poolScenario();
-    // clockFunction(poolScenario);
 
      BuddyAllocator *buddy = new BuddyAllocator(4096 << 12);
 //        BuddyAllocator *buddy = new BuddyAllocator(2048);
@@ -154,11 +238,19 @@ int main()
      currentGlobalAllocator = &dAllocator;
      printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
 
-    // StackAllocator *stack = new StackAllocator(10,1024, 4);
-    // currentGlobalAllocator = stack;
-    // poolScenario();
-
     delete buddy;
-    // delete pool;
+
+	//StackAllocator *stack = new StackAllocator(1024);		// non-aligned
+	//   //StackAllocator *stack = new StackAllocator(1024, 0);  // custom alignment defined by user
+	//currentGlobalAllocator = stack;
+
+	//size_t stackSize = stack->getSizeOfMemory();
+	//std::cout << "Stack size: " << stackSize <<std::endl;
+
+	//delete stack;
+
+	//poolScenario();
+	//stackScenario();
+
     return 0;
 }

@@ -8,15 +8,6 @@
 #include <windows.h>
 #include <cassert>
 
-const size_t StompAllocator::M_PAGE_SIZE = []() {
-    SYSTEM_INFO sysInfo;
-    GetSystemInfo(&sysInfo);
-    return sysInfo.dwPageSize;
-}();
-
-StompAllocator* StompAllocator::mStompAllocators;
-size_t StompAllocator::mNumInstances = 0;
-StompAllocator::PageHolder StompAllocator::mPageHolder;
 
 namespace STOMP_ALLOCATOR_PRIVATE {
 LONG CALLBACK guardPageHandler(PEXCEPTION_POINTERS ExceptionInfo) {
@@ -33,8 +24,59 @@ LONG CALLBACK guardPageHandler(PEXCEPTION_POINTERS ExceptionInfo) {
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
+
+#ifdef ENABLE_STOMP
+class DefStompAllocator : public AllocatorBase {
+public:
+    DefStompAllocator() : AllocatorBase(StompFlag()){
+    }
+
+    virtual ~DefStompAllocator() {
+    }
+
+private:
+    void *alloc_internal(size_t size) {
+        return malloc(size);
+    }
+    void dealloc_internal(void *p) {
+        free(p);
+    }
+};
+
+    DefStompAllocator globalAllocator;
+    StompAllocator globalStompAllocator(globalAllocator, ENABLE_STOMP);
+#endif // ENABLE_STOMP
 }
 using namespace STOMP_ALLOCATOR_PRIVATE;
+
+#ifdef ENABLE_STOMP
+void* operator new(size_t count) {
+    return globalStompAllocator.alloc_arr<char>(count);
+}
+
+void* operator new[](size_t count) {
+    return globalStompAllocator.alloc_arr<char>(count);
+}
+
+void  operator delete(void* ptr) {
+    globalStompAllocator.dealloc(ptr);
+}
+
+void  operator delete[](void* ptr) {
+    globalStompAllocator.dealloc(ptr);
+}
+#endif // ENABLE_STOMP
+
+
+const size_t StompAllocator::M_PAGE_SIZE = []() {
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    return sysInfo.dwPageSize;
+}();
+
+StompAllocator* StompAllocator::mStompAllocators;
+size_t StompAllocator::mNumInstances = 0;
+StompAllocator::PageHolder StompAllocator::mPageHolder;
 
 
 StompAllocator::StompAllocator(AllocatorBase& allocator, bool doCheckOverrun)
@@ -69,7 +111,7 @@ StompAllocator::PageHolder::~PageHolder() {
 
 StompAllocator::~StompAllocator() {
     mNumInstances--;
-    if(mNumInstances == 0) {
+    if(mNumInstances == 1) {
         mStompAllocators = mPageHolder.allocator;
     }
 }
