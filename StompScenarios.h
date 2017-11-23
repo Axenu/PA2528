@@ -1,4 +1,4 @@
-#ifdef __WIN32
+#if defined(__WIN32)  || defined(WIN32) || defined(_WIN32)
 #ifndef __STOMP_SCENARIOS__
 #define __STOMP_SCENARIOS__
 

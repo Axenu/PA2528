@@ -171,7 +171,6 @@ long buddyScenario() {
     return diff;
 }
 
-
 void runStompScenarios()
 {
     #ifndef ENABLE_STOMP

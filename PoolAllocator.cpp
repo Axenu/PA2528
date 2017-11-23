@@ -22,6 +22,10 @@ PoolAllocator::PoolAllocator(size_t elementSize, size_t numElements, int alignme
 	// Get memory from OS
 	uintptr_t rawPointer = reinterpret_cast<uintptr_t>(malloc(this->elementSize * numElements + alignment));
 
+	#ifdef TRACK_MEMORY
+	MemoryTracker::addReserved(reinterpret_cast<void*>(rawPointer), this->elementSize * numElements + alignment, ID);
+	#endif
+
 	// Caculate the misalignment
 	uintptr_t misalignedBytes = rawPointer & (alignment - 1);
 
@@ -58,6 +62,10 @@ PoolAllocator::~PoolAllocator() {
 	void* rawPointer = reinterpret_cast<void*>(reinterpret_cast<unsigned char*>(basePointer) - paddingBytes);
 
 	free(rawPointer);
+
+	#ifdef TRACK_MEMORY
+	MemoryTracker::removeReserved(ID);
+	#endif
 }
 
 void* PoolAllocator::alloc_internal(size_t size) {
