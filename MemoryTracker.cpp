@@ -2,6 +2,13 @@
 
 #include "MemoryTracker.h"
 
+size_t MemoryTracker::totalIndependentSize = 0;
+std::unordered_map<size_t, std::string> MemoryTracker::IDtoName;
+std::unordered_map<void*, MemoryTracker::Allocation> MemoryTracker::independentAllocations;
+std::unordered_map<size_t, MemoryTracker::ReservedMemoryArea> MemoryTracker::reservedAreas;
+std::unordered_map<void*, MemoryTracker::Allocation> MemoryTracker::dependentAllocations;
+std::ostringstream MemoryTracker::outstream;
+
 void MemoryTracker::setAllocatorName(size_t ID, std::string name)
 {
 	IDtoName.insert(std::make_pair(ID, name));
@@ -65,7 +72,7 @@ size_t MemoryTracker::getTotalWastedMemory()
 
 void MemoryTracker::writeLogToFile(std::string filename)
 {
-	std::ofstream f(filename, std::ofstream::out);
-
-	f << outstream.rdbuf();
+	std::ofstream f(filename);
+	f << outstream.str();
+	f.close();
 }

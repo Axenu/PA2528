@@ -4,6 +4,8 @@
 #include "StompAllocator.h"
 #endif // ENABLE_STOMP
 
+size_t AllocatorBase::nextFreeID = 0;
+
 AllocatorBase::AllocatorBase() : ID{ nextFreeID } {
     // std::cout << "ctor AllocatorBase" << std::endl;
 

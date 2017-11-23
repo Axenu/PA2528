@@ -105,6 +105,4 @@ private:
     friend StompAllocator;
 };
 
-size_t AllocatorBase::nextFreeID = 0;
-
 #endif

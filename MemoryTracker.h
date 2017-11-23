@@ -70,6 +70,4 @@ private:
 	static std::ostringstream outstream;
 };
 
-size_t MemoryTracker::totalIndependentSize = 0;
-
 #endif
