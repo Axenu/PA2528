@@ -29,7 +29,7 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 	m_end = static_cast<char*>(m_start) + sizeStack * sizeof(size_t);
 
 	// set the current "end" of the used memory as the start pointer
-	m_ptr_stack = m_start;
+	m_ptr_head = m_start;
 }
 
 StackAllocator::~StackAllocator()
@@ -48,15 +48,15 @@ void* StackAllocator::alloc_internal(size_t size)
 	std::cout << "allocating item of size: " << size << std::endl;
 	void* current_pointer;
 
-	current_pointer = m_ptr_stack;
+	current_pointer = m_ptr_head;
 
-	m_ptr_stack = static_cast<char*>(m_ptr_stack) + m_offset * sizeof(size_t);
-	//m_ptr_stack = static_cast<char*>(m_ptr_stack) + size * sizeof(size_t);
-	//m_ptr_stack = static_cast<char*>(m_ptr_stack) + OFFSET;
+	m_ptr_head = static_cast<char*>(m_ptr_head) + m_offset * sizeof(size_t);
+	//m_ptr_head = static_cast<char*>(m_ptr_head) + size * sizeof(size_t);
+	//m_ptr_head = static_cast<char*>(m_ptr_head) + OFFSET;
 
 	// add check for overflow
-	if (m_ptr_stack > m_end)
-		m_ptr_stack = current_pointer;
+	if (m_ptr_head > m_end)
+		m_ptr_head = current_pointer;
 
 	return current_pointer;
 }
@@ -73,18 +73,18 @@ void StackAllocator::free(void* p) // clears the whole stack
 
 void StackAllocator::freeBlock() // clears the top-most block of the stack
 {
-	if (m_ptr_stack != m_start) // make sure the stack pointer is pointing ahead of the start of the stack to prevent underflow errors
+	if (m_ptr_head != m_start) // make sure the stack pointer is pointing ahead of the start of the stack to prevent underflow errors
 	{
 		// dealloc memory from the current top-most block
-		dealloc(m_ptr_stack);
+		dealloc(m_ptr_head);
 		
 		// move the stack pointer back to the previous block
-		m_ptr_stack = static_cast<char*>(m_ptr_stack) - m_offset * sizeof(size_t);
+		m_ptr_head = static_cast<char*>(m_ptr_head) - m_offset * sizeof(size_t);
 		
-		if (m_ptr_stack < m_start) // check for underflow
+		if (m_ptr_head < m_start) // check for underflow
 		{
 			std::cout << "No block available to remove from stack, underflow prevented." << std::endl;
-			m_ptr_stack = m_start;
+			m_ptr_head = m_start;
 		}
 			
 	}
@@ -93,5 +93,5 @@ void StackAllocator::freeBlock() // clears the top-most block of the stack
 void StackAllocator::reset()
 {
 	// reset the stack pointer back to the start of the stack
-	m_ptr_stack = m_start;
+	m_ptr_head = m_start;
 }

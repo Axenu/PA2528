@@ -12,13 +12,15 @@ class StackTester
 public:
 	static void timeTest(size_t stackSize, size_t numObjects); // tests the stack allocator against the OS allocator
 
+	static void timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals);
+
 	static void overflowTest(); // tries to cause an overflow
 
 	static void underflowTest(); // tries to cause an underflow
 };
 
 // template<typename T>
-inline void StackTester::timeTest(size_t stackSize, size_t numObjects)
+inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // allocates all the objects before deallocating
 {
 	size_t** testArr = new size_t*[numObjects];
 
@@ -39,7 +41,7 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects)
 	//end timer
 	std::chrono::high_resolution_clock::time_point endTime = std::chrono::high_resolution_clock::now();
 	double deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
-	std::cout << "OS time in microsec: " << deltaTime << std::endl;
+	std::cout << "OS time: " << deltaTime << "ms" << std::endl;
 	
 	
 	// StackAlloc
@@ -59,10 +61,70 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects)
 	// end timer
 	endTime = std::chrono::high_resolution_clock::now();
 	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
-	std::cout << "StackAllocator time in microsec: " << deltaTime << std::endl;
+	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
 	delete[] testArr;
 	delete stack;
+}
+
+inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals) // allocs and deallocs in interval
+{
+	size_t** testArr = new size_t*[objPerInterval];
+	int i, j, k;
+
+	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " over "<< intervals <<" allocations of " << objPerInterval << " objects." << std::endl;
+
+	// OS
+	// start timer
+	std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
+
+	// run OS test
+	for (i = 0; i < intervals; ++i)
+	{
+		for (j = 0; j < objPerInterval; ++j) // alloc objects
+		{
+			// alloc code
+		}
+
+		for (k = 0; k < objPerInterval; ++k) // alloc objects
+		{
+			// dealloc code
+		}
+	}
+
+	//end timer
+	std::chrono::high_resolution_clock::time_point endTime = std::chrono::high_resolution_clock::now();
+	double deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+	std::cout << "OS time: " << deltaTime << "ms" << std::endl;
+
+	
+	// StackAlloc
+	//StackAllocator* stack = new StackAllocator(stackSize, 0);
+
+	// start timer
+	startTime = std::chrono::high_resolution_clock::now();
+
+	// run StackAlloc test
+	for (i = 0; i < intervals; ++i)
+	{
+		for (j = 0; j < objPerInterval; ++j) // alloc objects
+		{
+			// alloc code
+		}
+
+		for (k = 0; k < objPerInterval; ++k) // alloc objects
+		{
+			// dealloc code
+		}
+	}
+
+	// end timer
+	endTime = std::chrono::high_resolution_clock::now();
+	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
+
+	delete[] testArr;
+	//delete stack;
 }
 
 inline void StackTester::overflowTest()
