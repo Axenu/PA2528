@@ -11,6 +11,8 @@ void bufferOverflowTest(AllocatorBase* currentGlobalAllocator)
 	//test code
 	size_t a, b;
 
+	// add code to initialize a & b
+
 	size_t result = a + b;
 	if (result < a) // overflow
 	{
@@ -33,7 +35,7 @@ void bufferUnderflowTest(AllocatorBase* currentGlobalAllocator)
 
 	std::cout << "Running StackAllocator buffer underflow test..." << std::endl;
 
-	if (!currentGlobalAllocator->alloc<size_t>(-1))
+	if (currentGlobalAllocator->alloc<size_t>(-1) < 0)
 	{
 		error = true;
 		std::cout << "Stack underflow test encountered errors!\n";
