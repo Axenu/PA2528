@@ -4,8 +4,12 @@
 #include "StompAllocator.h"
 #endif // ENABLE_STOMP
 
-AllocatorBase::AllocatorBase() {
+size_t AllocatorBase::nextFreeID = 0;
+
+AllocatorBase::AllocatorBase() : ID{ nextFreeID } {
     // std::cout << "ctor AllocatorBase" << std::endl;
+
+	++nextFreeID;
 
     #ifdef ENABLE_STOMP
     mStompAllocator = new StompAllocator(*this, ENABLE_STOMP);
@@ -27,4 +31,9 @@ AllocatorBase::~AllocatorBase() {
         delete mStompAllocator;
     }
     #endif // ENABLE_STOMP
+}
+
+void AllocatorBase::setTrackingName(std::string name)
+{
+	MemoryTracker::setAllocatorName(ID, name);
 }
