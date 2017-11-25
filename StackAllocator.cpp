@@ -57,7 +57,7 @@ void* StackAllocator::alloc_internal(size_t size)
 	current_pointer = m_ptr_current;
 
 	// move the head to the start of the next block
-	m_ptr_current = static_cast<char*>(m_ptr_current) + m_offset * sizeof(size_t);
+	m_ptr_current = static_cast<char*>(m_ptr_current) + size + m_offset * sizeof(size_t);
 	//m_ptr_current = static_cast<char*>(m_ptr_current) + 4;
 
 	// check if out of memory
