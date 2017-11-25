@@ -22,8 +22,9 @@ public:
 template<typename T>
 inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // allocates all the objects before deallocating
 {
+	T** testArr = new T*[stackSize];
+	//std::vector<T>* testVec = new std::vector<T>();
 	int i;
-	T** testArr = new T*[numObjects];
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " and allocation of " << numObjects << " objects." << std::endl;
 	
@@ -37,7 +38,8 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 		testArr[i] = new T;
 	}
 
-	for (i = 0; i < numObjects; ++i) {
+	for (int i = 0; i < numObjects; ++i)
+	{
 		delete testArr[(i * 307) % numObjects];
 	}
 
@@ -48,7 +50,7 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	
 	
 	// StackAlloc
-	StackAllocator* stack = new StackAllocator(stackSize, 0);
+	StackAllocator* stack = new StackAllocator(stackSize);
 
 	// start timer
 	startTime = std::chrono::high_resolution_clock::now();
@@ -56,7 +58,7 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	// run StackAlloc test
 	for (i = 0; i < numObjects; ++i)
 	{
-		stack->alloc<T>();
+		stack->alloc<T>(sizeof(T));
 	}
 	
 	for (i = 0; i < numObjects; ++i)
@@ -76,7 +78,8 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 template<typename T>
 inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals) // allocs and deallocs in interval
 {
-	T** testArr = new T*[objPerInterval];
+	T** testArr = new T*[stackSize];
+	//std::vector<T>* testVec = new std::vector<T>();
 	int i, j;
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " over "<< intervals <<" allocations of " << objPerInterval << " objects." << std::endl;
@@ -106,7 +109,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 
 	
 	// StackAlloc
-	StackAllocator* stack = new StackAllocator(stackSize, 0);
+	StackAllocator* stack = new StackAllocator(stackSize);
 
 	// start timer
 	startTime = std::chrono::high_resolution_clock::now();
@@ -116,7 +119,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	{
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
-			testArr[i] = stack->alloc<T>(j);
+			stack->alloc<T>(sizeof(T));
 		}
 
 		for (j = 0; j < objPerInterval; ++j) // dealloc objects

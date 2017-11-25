@@ -101,16 +101,25 @@ void poolScenario(size_t numObjects = 1000000) {
 	std::getchar();
 }
 
-void stackScenario()
+void stackScenario(size_t numObjects = 1000000)
 {
-	std::cout << "Stack allocator time tests:" << std::endl;
-	StackTester::timeTest(1024, 1000);
+	std::cout << "Stack allocation tests (int):" << std::endl;
+	StackTester::timeTest<int>(64, numObjects);
+	std::cout << std::endl;
 
-	std::cout << "Stack allocator overflow tests:" << std::endl;
-	StackTester::overflowTest();
+	std::cout << "Stack allocation tests (struct):" << std::endl;
+	//StackTester::timeTest<C>(1024, numObjects);
+	std::cout << std::endl;
 
-	std::cout << "Stack allocator underflow tests:" << std::endl;
-	StackTester::underflowTest();
+	std::cout << std::endl;
+	std::cout << "Stack allocation interval tests (int):" << std::endl;
+	StackTester::timeTestAllocDeallocIntervals<int>(128, numObjects, 1);
+	StackTester::timeTestAllocDeallocIntervals<int>(128, numObjects, 4);
+	StackTester::timeTestAllocDeallocIntervals<int>(256, numObjects, 8);
+	StackTester::timeTestAllocDeallocIntervals<int>(512, numObjects, 16);
+	std::cout << std::endl;
+
+	std::getchar();
 }
 
 long buddyScenario() {
@@ -250,7 +259,7 @@ int main()
 	//delete stack;
 
 	//poolScenario();
-	//stackScenario();
+	//stackScenario(10);
 
     return 0;
 }
