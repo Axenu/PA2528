@@ -22,8 +22,9 @@ public:
 template<typename T>
 inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // allocates all the objects before deallocating
 {
-	T** testArr = new T*[stackSize];
-	//std::vector<T>* testVec = new std::vector<T>();
+	void** defaultAlloc = new void*[numObjects];
+	//** testArr = new T*[stackSize];
+
 	int i;
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " and allocation of " << numObjects << " objects." << std::endl;
@@ -35,12 +36,14 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	// run OS test
 	for (i = 0; i < numObjects; ++i) // correct implementation for testing vs stack?
 	{
-		testArr[i] = new T;
+		defaultAlloc[i] = malloc(sizeof(T));
+		//testArr[i] = new T;
 	}
 
-	for (int i = 0; i < numObjects; ++i)
+	for (i = 0; i < numObjects; ++i)
 	{
-		delete testArr[(i * 307) % numObjects];
+		free(defaultAlloc[i]);
+		//delete testArr[(i * 307) % numObjects];
 	}
 
 	//end timer
@@ -71,15 +74,15 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
-	delete[] testArr;
+	delete[] defaultAlloc;
+	//delete[] testArr;
 	delete stack;
 }
 
 template<typename T>
 inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals) // allocs and deallocs in interval
 {
-	T** testArr = new T*[stackSize];
-	//std::vector<T>* testVec = new std::vector<T>();
+	void** defaultAlloc = new void*[objPerInterval];
 	int i, j;
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " over "<< intervals <<" allocations of " << objPerInterval << " objects." << std::endl;
@@ -93,12 +96,12 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	{
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
-			testArr[j] = new T;
+			defaultAlloc[j] = malloc(sizeof(T));
 		}
 
 		for (j = 0; j < objPerInterval; ++j) // dealloc objects
 		{
-			delete testArr[(j * 307) % objPerInterval];
+			free(defaultAlloc[j]);
 		}
 	}
 
@@ -133,7 +136,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
-	delete[] testArr;
+	delete[] defaultAlloc;
 	delete stack;
 }
 
