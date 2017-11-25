@@ -10,19 +10,20 @@
 class StackTester
 {
 public:
+	template<typename T>
 	static void timeTest(size_t stackSize, size_t numObjects); // tests the stack allocator against the OS allocator
 
+	template<typename T>
 	static void timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals);
 
 	static void overflowTest(); // tries to cause an overflow
-
-	static void underflowTest(); // tries to cause an underflow
 };
 
-// template<typename T>
+template<typename T>
 inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // allocates all the objects before deallocating
 {
-	size_t** testArr = new size_t*[numObjects];
+	int i;
+	T** testArr = new T*[numObjects];
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " and allocation of " << numObjects << " objects." << std::endl;
 	
@@ -31,12 +32,14 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
 	// run OS test
-	for (int i = 0; i < numObjects; ++i) // correct implementation for testing vs stack?
+	for (i = 0; i < numObjects; ++i) // correct implementation for testing vs stack?
 	{
-		testArr[i] = new size_t;
+		testArr[i] = new T;
 	}
 
-	delete testArr;
+	for (i = 0; i < numObjects; ++i) {
+		delete testArr[(i * 307) % numObjects];
+	}
 
 	//end timer
 	std::chrono::high_resolution_clock::time_point endTime = std::chrono::high_resolution_clock::now();
@@ -51,12 +54,15 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	startTime = std::chrono::high_resolution_clock::now();
 
 	// run StackAlloc test
-	for (int i = 0; i < numObjects; ++i)
+	for (i = 0; i < numObjects; ++i)
 	{
-		stack->alloc<size_t>(i);
+		stack->alloc<T>();
 	}
-
-	stack->dealloc<size_t>(testArr[0]);
+	
+	for (i = 0; i < numObjects; ++i)
+	{
+		stack->dealloc<T>(nullptr);
+	}
 
 	// end timer
 	endTime = std::chrono::high_resolution_clock::now();
@@ -67,10 +73,11 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	delete stack;
 }
 
+template<typename T>
 inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals) // allocs and deallocs in interval
 {
-	size_t** testArr = new size_t*[objPerInterval];
-	int i, j, k;
+	T** testArr = new T*[objPerInterval];
+	int i, j;
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " over "<< intervals <<" allocations of " << objPerInterval << " objects." << std::endl;
 
@@ -83,12 +90,12 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	{
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
-			// alloc code
+			testArr[j] = new T;
 		}
 
-		for (k = 0; k < objPerInterval; ++k) // alloc objects
+		for (j = 0; j < objPerInterval; ++j) // dealloc objects
 		{
-			// dealloc code
+			delete testArr[(j * 307) % objPerInterval];
 		}
 	}
 
@@ -99,7 +106,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 
 	
 	// StackAlloc
-	//StackAllocator* stack = new StackAllocator(stackSize, 0);
+	StackAllocator* stack = new StackAllocator(stackSize, 0);
 
 	// start timer
 	startTime = std::chrono::high_resolution_clock::now();
@@ -109,12 +116,12 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	{
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
-			// alloc code
+			testArr[i] = stack->alloc<T>(j);
 		}
 
-		for (k = 0; k < objPerInterval; ++k) // alloc objects
+		for (j = 0; j < objPerInterval; ++j) // dealloc objects
 		{
-			// dealloc code
+			stack->dealloc<T>(nullptr);
 		}
 	}
 
@@ -124,20 +131,15 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
 	delete[] testArr;
-	//delete stack;
+	delete stack;
 }
 
 inline void StackTester::overflowTest()
 {
 	StackAllocator* stack = new StackAllocator(64, 0);
 
+	// alloc code
 
-	delete stack;
-}
-
-inline void StackTester::underflowTest()
-{
-	StackAllocator* stack = new StackAllocator(0, 0);
 	delete stack;
 }
 
