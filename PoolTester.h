@@ -16,6 +16,11 @@ public:
 	static void scenario2(size_t numObjects, int alignment);
 
 	static void testCorrectness(size_t numObjects, int alignment);
+
+	static void testRandom();
+
+private:
+	static void randomHelper(AllocatorBase* allocator);	// Called from testRandom()
 };
 
 template<typename T>

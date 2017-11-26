@@ -98,19 +98,37 @@ void poolScenario(size_t numObjects = 1000000) {
 	PoolTester::scenario2<C>(numObjects, 16);
 	PoolTester::scenario2<C>(numObjects, 32);
 
+	std::cout << "\n\nTesting pool size:\n";
+	PoolTester::scenario1<int>(10000, 1);
+	PoolTester::scenario1<int>(100000, 1);
+	PoolTester::scenario1<int>(1000000, 1);
+	PoolTester::scenario1<int>(10000000, 1);
+
+	std::cout << "\n\nTesting random:\n";
+	PoolTester::testRandom();
+
 	std::getchar();
 }
 
-void stackScenario()
+void stackScenario(size_t numObjects = 1000000)
 {
-	std::cout << "Stack allocator time tests:" << std::endl;
-	StackTester::timeTest(1024, 1000);
+	std::cout << "Stack allocation tests (int):" << std::endl;
+	StackTester::timeTest<int>(64, numObjects);
+	std::cout << std::endl;
 
-	std::cout << "Stack allocator overflow tests:" << std::endl;
-	StackTester::overflowTest();
+	std::cout << "Stack allocation tests (struct):" << std::endl;
+	//StackTester::timeTest<C>(1024, numObjects);
+	std::cout << std::endl;
 
-	std::cout << "Stack allocator underflow tests:" << std::endl;
-	StackTester::underflowTest();
+	std::cout << std::endl;
+	std::cout << "Stack allocation interval tests (int):" << std::endl;
+	StackTester::timeTestAllocDeallocIntervals<int>(128, numObjects, 1);
+	StackTester::timeTestAllocDeallocIntervals<int>(128, numObjects, 4);
+	StackTester::timeTestAllocDeallocIntervals<int>(256, numObjects, 8);
+	StackTester::timeTestAllocDeallocIntervals<int>(512, numObjects, 16);
+	std::cout << std::endl;
+
+	std::getchar();
 }
 
 long buddyScenario() {
@@ -226,7 +244,6 @@ long clockFunction(void (*func) ()) {
 
 int main()
 {
-
     DefaultAllocator dAllocator = DefaultAllocator();
 
 
@@ -249,7 +266,7 @@ int main()
 	//delete stack;
 
 	//poolScenario();
-	//stackScenario();
+	//stackScenario(10);
 
     return 0;
 }
