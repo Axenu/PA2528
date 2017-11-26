@@ -15,11 +15,10 @@ public:
 	size_t getSizeOfMemory();	// used when checking for overflow
 
 private:
-	// alloc_internal (size_t size, size_t allignment, size_t offset) ?
 	virtual void* alloc_internal(size_t size);
 	virtual void dealloc_internal(void* p);
 
-	void reset();			 // resets m_ptr_stack to the initial position of m_start
+	void reset();			 // resets head to the start of the stack
 
 private:
 	int m_alignment; // alignment of the memory

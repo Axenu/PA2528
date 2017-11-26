@@ -5,8 +5,6 @@ static_assert(SIZE_OF_ALLOC_OFFSET == 4, "Allocation offset has wrong size.");
 
 StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 {
-	//std::cout << "ctor StackAllocator" << std::endl;
-
 	// default offset
 	m_offset = 0;
 
@@ -17,7 +15,6 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 	m_sizeStack = sizeStack;
 
 	// allocate memory from the OS to the stack
-	//std::cout << "allocating memory of size " << sizeStack * sizeof(size_t) << " for the stack allocator" << std::endl;
 	if (m_alignment > 0)
 #if defined(__WIN32) || defined(WIN32)  || defined(_WIN32)
 		m_start = _aligned_malloc(sizeStack * sizeof(size_t), alignment);
@@ -39,7 +36,6 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 
 StackAllocator::~StackAllocator()
 {
-	//std::cout << "dtor StackAllocator" << std::endl;
 	free(m_start); // clear the stack
 }
 
@@ -56,10 +52,8 @@ void* StackAllocator::alloc_internal(size_t size)
 	current_pointer = m_ptr_current;
 
 	// move the head to the start of the next block
-	m_ptr_current = static_cast<char*>(m_ptr_current) + m_offset + size * sizeof(size_t);
-	//m_ptr_current = static_cast<char*>(m_ptr_current) + 4;
-
 	m_offset += size * sizeof(size_t);
+	m_ptr_current = static_cast<char*>(m_ptr_current) + m_offset;
 
 	// check if out of memory
 	if (m_ptr_current > m_end)
