@@ -11,14 +11,14 @@ public:
 	StackAllocator(size_t sizeStack, const size_t alignment = 0); // size of the stack, and alignment in the memory
 	~StackAllocator();
 
-	void* getCurrentHead() { return m_head; };		// returns the current "head" of the stack
+	void reset(); // resets head to the start of the stack
+
+	void* getHead() { return m_head; };		// returns the current "head" of the stack
 	size_t getSizeOfMemory();
 
 private:
 	virtual void* alloc_internal(size_t size);
 	virtual void dealloc_internal(void* p);
-
-	void reset();			 // resets head to the start of the stack
 
 private:
 	int m_alignment; // alignment of the memory

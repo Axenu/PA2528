@@ -110,7 +110,7 @@ void poolScenario(size_t numObjects = 1000000) {
 	std::getchar();
 }
 
-void stackScenario(size_t numObjects = 1000000)
+void stackScenario(size_t stackSize = 1024, size_t numObjects = 1000000)
 {
 	std::cout << "Stack allocation tests (int):" << std::endl;
 	StackTester::timeTest<int>(1024, numObjects);
@@ -126,20 +126,20 @@ void stackScenario(size_t numObjects = 1000000)
 
 	std::cout << std::endl;
 	std::cout << "Stack allocation interval tests (int):" << std::endl;
-	StackTester::timeTestAllocDeallocIntervals<int>(1024, numObjects, 1);
-	StackTester::timeTestAllocDeallocIntervals<int>(1024, numObjects, 4);
-	StackTester::timeTestAllocDeallocIntervals<int>(1024, numObjects, 8);
-	StackTester::timeTestAllocDeallocIntervals<int>(1024, numObjects, 16);
-	StackTester::timeTestAllocDeallocIntervals<int>(1024, numObjects, 32);
-	StackTester::timeTestAllocDeallocIntervals<int>(2048, numObjects, 64);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 1);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 4);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 8);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 16);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 32);
+	StackTester::timeTestAllocDeallocIntervals<int>(stackSize * stackSize, numObjects, 64);
 
 	std::cout << "Stack allocation interval tests (char):" << std::endl;
-	StackTester::timeTestAllocDeallocIntervals<char>(1024, numObjects, 1);
-	StackTester::timeTestAllocDeallocIntervals<char>(1024, numObjects, 4);
-	StackTester::timeTestAllocDeallocIntervals<char>(1024, numObjects, 8);
-	StackTester::timeTestAllocDeallocIntervals<char>(1024, numObjects, 16);
-	StackTester::timeTestAllocDeallocIntervals<char>(1024, numObjects, 32);
-	StackTester::timeTestAllocDeallocIntervals<char>(2048, numObjects, 64);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 1);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 4);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 8);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 16);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 32);
+	StackTester::timeTestAllocDeallocIntervals<char>(stackSize * stackSize, numObjects, 64);
 
 	std::cout << std::endl;
 

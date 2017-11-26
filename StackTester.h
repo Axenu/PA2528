@@ -64,10 +64,12 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 		stack->alloc<T>(sizeof(T));
 	}
 	
-	for (i = 0; i < numObjects; ++i)
-	{
-		stack->dealloc<T>(nullptr);
-	}
+	//for (i = 0; i < numObjects; ++i)
+	//{
+	//	stack->dealloc<T>(nullptr);
+	//}
+
+	stack->reset();
 
 	// end timer
 	endTime = std::chrono::high_resolution_clock::now();
@@ -128,10 +130,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 			stack->alloc<T>(sizeof(T));
 		}
 
-		for (j = 0; j < objPerInterval; ++j) // dealloc objects
-		{
-			stack->dealloc<T>(nullptr);
-		}
+		stack->reset();
 	}
 
 	// end timer

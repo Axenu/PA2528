@@ -17,16 +17,16 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 	// allocate memory from the OS to the stack
 	if (m_alignment > 0)
 #if defined(__WIN32) || defined(WIN32)  || defined(_WIN32)
-		m_start = _aligned_malloc(sizeStack * sizeof(size_t), alignment);
+		m_start = _aligned_malloc(sizeStack, alignment);
 #else
 		// m_start = aligned_alloc(alignment, sizeStack * sizeof(size_t));
 		posix_memalign(&m_start, alignment, sizeStack * sizeof(size_t));
 #endif
 	else
-		m_start = malloc(sizeStack * sizeStack * sizeof(size_t));
+		m_start = malloc(sizeStack);
 
 	// store a pointer to the end of the memory block
-	m_end = static_cast<char*>(m_start) + sizeStack * sizeof(size_t);
+	m_end = static_cast<char*>(m_start) + sizeStack;
 
 	//std::cout << "Stack start: " << m_start << " | Stack end:" << m_end << std::endl;
 
@@ -36,33 +36,32 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 
 StackAllocator::~StackAllocator()
 {
+	reset();
 	free(m_start); // clear the stack
 }
 
 size_t StackAllocator::getSizeOfMemory()
 {
-	return m_sizeStack * sizeof(size_t);
+	return m_sizeStack;
 }
 
 void* StackAllocator::alloc_internal(size_t size)
 {
-	//std::cout << "Stack allocating at address: " << m_head <<" | Size: "<< size << std::endl;
-	void* current_pointer; // points at the start of the block
-
-	current_pointer = m_head;
-
-	// move the head to the start of the next block
-	m_head = static_cast<char*>(m_head) + m_offset * sizeof(size_t);
-
-	// check if out of memory
-	if (m_head > m_end)
+	if (static_cast<char*>(m_head) + size <= m_end)
 	{
-		return nullptr;
+		//std::cout << "Stack allocating at address: " << m_head <<" | Size: "<< size << std::endl;
+		void* prev_head; // points at the start of the block
+
+		prev_head = m_head;
+
+		// move the head to the start of the next block
+		m_head = static_cast<char*>(m_head) + size;
+
+		//m_offset += size * sizeof(size_t);
+		return prev_head;
 	}
 
-	//m_offset += size * sizeof(size_t);
-	m_offset += 1;
-	return current_pointer;
+	return nullptr;
 }
 
 void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
