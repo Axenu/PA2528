@@ -12,7 +12,7 @@ public:
 	~StackAllocator();
 
 	void* getCurrentHead() { return m_head; };		// returns the current "head" of the stack
-	size_t getSizeOfMemory();	// used when checking for overflow
+	size_t getSizeOfMemory();
 
 private:
 	virtual void* alloc_internal(size_t size);

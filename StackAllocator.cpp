@@ -1,7 +1,7 @@
 #include "StackAllocator.h"
 
-static const size_t SIZE_OF_ALLOC_OFFSET = sizeof(size_t);
-static_assert(SIZE_OF_ALLOC_OFFSET == 4, "Allocation offset has wrong size.");
+//static const size_t SIZE_OF_ALLOC_OFFSET = sizeof(size_t);
+//static_assert(SIZE_OF_ALLOC_OFFSET == 4, "Allocation offset has wrong size.");
 
 StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 {
