@@ -205,47 +205,47 @@ long buddyScenario() {
 
 long realisticBuddyScenario();
 
-// void runStompScenarios()
-// {
-//     #ifndef ENABLE_STOMP
-//     std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
-//     return;
-//     #endif // ENABLE_STOMP
-//
-//
-//     std::string checkStr;
-//     #if ENABLE_STOMP == true
-//     checkStr = "overrun";
-//     {
-//         std::cout << "Running StompAllocator overrun tests..." << std::endl;
-//         DefaultAllocator allocator;
-//         stompAccessFreedFailScenario(&allocator);
-//         stompPassScenario(&allocator);
-//         stompOverrunFailScenario(&allocator);
-//     }
-//     #elif ENABLE_STOMP == false
-//     checkStr = "underrun";
-//     {
-//         std::cout << "Running StompAllocator underrun tests..." << std::endl;
-//         DefaultAllocator allocator;
-//         stompAccessFreedFailScenario(&allocator);
-//         stompPassScenario(&allocator);
-//         stompUnderrunFailScenario(&allocator);
-//     }
-//     #else
-//     #error Invalid ENABLE_STOMP value
-//     #endif // ENABLE_STOMP
-//
-//     {
-//         std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
-//         BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
-//         currentGlobalAllocator = &allocator;
-//         buddyScenario();
-//     }
-//
-//     std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
-//     poolScenario(10000);
-// }
+void runStompScenarios()
+{
+    #ifndef ENABLE_STOMP
+    std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
+    return;
+    #endif // ENABLE_STOMP
+
+
+    std::string checkStr;
+    #if ENABLE_STOMP == true
+    checkStr = "overrun";
+    {
+        std::cout << "Running StompAllocator overrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompOverrunFailScenario(&allocator);
+    }
+    #elif ENABLE_STOMP == false
+    checkStr = "underrun";
+    {
+        std::cout << "Running StompAllocator underrun tests..." << std::endl;
+        DefaultAllocator allocator;
+        stompAccessFreedFailScenario(&allocator);
+        stompPassScenario(&allocator);
+        stompUnderrunFailScenario(&allocator);
+    }
+    #else
+    #error Invalid ENABLE_STOMP value
+    #endif // ENABLE_STOMP
+
+    {
+        std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
+        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+        currentGlobalAllocator = &allocator;
+        buddyScenario();
+    }
+
+    std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
+    poolScenario(10000);
+}
 
 long clockFunction(void (*func) ()) {
     //start timer
