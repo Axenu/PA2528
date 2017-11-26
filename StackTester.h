@@ -22,8 +22,8 @@ public:
 template<typename T>
 inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // allocates all the objects before deallocating
 {
-	void** defaultAlloc = new void*[numObjects];
-	//** testArr = new T*[stackSize];
+	//void** defaultAlloc = new void*[numObjects];
+	std::vector<T>* testVec = new std::vector<T>(stackSize);
 
 	int i;
 
@@ -36,14 +36,14 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	// run OS test
 	for (i = 0; i < numObjects; ++i) // correct implementation for testing vs stack?
 	{
-		defaultAlloc[i] = malloc(sizeof(T));
-		//testArr[i] = new T;
+		testVec->push_back(sizeof(T));
+		//defaultAlloc[i] = malloc(sizeof(T));
 	}
 
 	for (i = 0; i < numObjects; ++i)
 	{
-		free(defaultAlloc[i]);
-		//delete testArr[(i * 307) % numObjects];
+		testVec->pop_back();
+		//free(defaultAlloc[i]);
 	}
 
 	//end timer
@@ -74,15 +74,16 @@ inline void StackTester::timeTest(size_t stackSize, size_t numObjects) // alloca
 	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
-	delete[] defaultAlloc;
-	//delete[] testArr;
+	//delete[] defaultAlloc;
+	delete testVec;
 	delete stack;
 }
 
 template<typename T>
 inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t objPerInterval, size_t intervals) // allocs and deallocs in interval
 {
-	void** defaultAlloc = new void*[objPerInterval];
+	//void** defaultAlloc = new void*[objPerInterval];
+	std::vector<T>* testVec = new std::vector<T>(stackSize);
 	int i, j;
 
 	std::cout << "Testing stack allocation vs OS with stack of size " << stackSize << " over "<< intervals <<" allocations of " << objPerInterval << " objects." << std::endl;
@@ -96,12 +97,14 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	{
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
-			defaultAlloc[j] = malloc(sizeof(T));
+			testVec->push_back(sizeof(T));
+			//defaultAlloc[j] = malloc(sizeof(T));
 		}
 
 		for (j = 0; j < objPerInterval; ++j) // dealloc objects
 		{
-			free(defaultAlloc[j]);
+			testVec->pop_back();
+			//free(defaultAlloc[j]);
 		}
 	}
 
@@ -109,7 +112,6 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	std::chrono::high_resolution_clock::time_point endTime = std::chrono::high_resolution_clock::now();
 	double deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	std::cout << "OS time: " << deltaTime << "ms" << std::endl;
-
 	
 	// StackAlloc
 	StackAllocator* stack = new StackAllocator(stackSize);
@@ -136,7 +138,8 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 	deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	std::cout << "StackAllocator time: " << deltaTime << "ms" << std::endl;
 
-	delete[] defaultAlloc;
+	delete testVec;
+	//delete[] defaultAlloc;
 	delete stack;
 }
 
