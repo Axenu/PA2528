@@ -11,7 +11,7 @@ public:
 	StackAllocator(size_t sizeStack, const size_t alignment = 0); // size of the stack, and alignment in the memory
 	~StackAllocator();
 
-	void* getCurrentHead() { return m_ptr_current; };		// returns the current "head" of the stack
+	void* getCurrentHead() { return m_head; };		// returns the current "head" of the stack
 	size_t getSizeOfMemory();	// used when checking for overflow
 
 private:
