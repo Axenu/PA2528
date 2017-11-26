@@ -41,7 +41,6 @@ StackAllocator::~StackAllocator()
 {
 	//std::cout << "dtor StackAllocator" << std::endl;
 	free(m_start); // clear the stack
-	m_start = nullptr;
 }
 
 size_t StackAllocator::getSizeOfMemory()
@@ -57,8 +56,10 @@ void* StackAllocator::alloc_internal(size_t size)
 	current_pointer = m_ptr_current;
 
 	// move the head to the start of the next block
-	m_ptr_current = static_cast<char*>(m_ptr_current) + size + m_offset * sizeof(size_t);
+	m_ptr_current = static_cast<char*>(m_ptr_current) + m_offset + size * sizeof(size_t);
 	//m_ptr_current = static_cast<char*>(m_ptr_current) + 4;
+
+	m_offset += size * sizeof(size_t);
 
 	// check if out of memory
 	if (m_ptr_current > m_end)
@@ -76,7 +77,6 @@ void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
 	{
 		// move the stack pointer back to the previous block
 		m_ptr_current = static_cast<char*>(m_ptr_current) - m_offset * sizeof(size_t);
-		//m_ptr_current = static_cast<char*>(m_ptr_current) - 4;
 		//std::cout << "Stack deallocating at address: " << m_ptr_current << std::endl;
 
 		if (m_ptr_current < m_start) // check for underflow
