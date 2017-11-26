@@ -203,47 +203,49 @@ long buddyScenario() {
     return diff;
 }
 
-void runStompScenarios()
-{
-    #ifndef ENABLE_STOMP
-    std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
-    return;
-    #endif // ENABLE_STOMP
+long realisticBuddyScenario();
 
-
-    std::string checkStr;
-    #if ENABLE_STOMP == true
-    checkStr = "overrun";
-    {
-        std::cout << "Running StompAllocator overrun tests..." << std::endl;
-        DefaultAllocator allocator;
-        stompAccessFreedFailScenario(&allocator);
-        stompPassScenario(&allocator);
-        stompOverrunFailScenario(&allocator);
-    }
-    #elif ENABLE_STOMP == false
-    checkStr = "underrun";
-    {
-        std::cout << "Running StompAllocator underrun tests..." << std::endl;
-        DefaultAllocator allocator;
-        stompAccessFreedFailScenario(&allocator);
-        stompPassScenario(&allocator);
-        stompUnderrunFailScenario(&allocator);
-    }
-    #else
-    #error Invalid ENABLE_STOMP value
-    #endif // ENABLE_STOMP
-
-    {
-        std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
-        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
-        currentGlobalAllocator = &allocator;
-        buddyScenario();
-    }
-
-    std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
-    poolScenario(10000);
-}
+// void runStompScenarios()
+// {
+//     #ifndef ENABLE_STOMP
+//     std::cout << "Cannot run stomp scenarios. Enable the StompAllocator first by defining ENABLE_STOMP." << std::endl;
+//     return;
+//     #endif // ENABLE_STOMP
+//
+//
+//     std::string checkStr;
+//     #if ENABLE_STOMP == true
+//     checkStr = "overrun";
+//     {
+//         std::cout << "Running StompAllocator overrun tests..." << std::endl;
+//         DefaultAllocator allocator;
+//         stompAccessFreedFailScenario(&allocator);
+//         stompPassScenario(&allocator);
+//         stompOverrunFailScenario(&allocator);
+//     }
+//     #elif ENABLE_STOMP == false
+//     checkStr = "underrun";
+//     {
+//         std::cout << "Running StompAllocator underrun tests..." << std::endl;
+//         DefaultAllocator allocator;
+//         stompAccessFreedFailScenario(&allocator);
+//         stompPassScenario(&allocator);
+//         stompUnderrunFailScenario(&allocator);
+//     }
+//     #else
+//     #error Invalid ENABLE_STOMP value
+//     #endif // ENABLE_STOMP
+//
+//     {
+//         std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
+//         BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+//         currentGlobalAllocator = &allocator;
+//         buddyScenario();
+//     }
+//
+//     std::cout << "Running StompAllocator-PoolAllocator " << checkStr << " test..." << std::endl;
+//     poolScenario(10000);
+// }
 
 long clockFunction(void (*func) ()) {
     //start timer
@@ -262,12 +264,26 @@ int main()
     DefaultAllocator dAllocator = DefaultAllocator();
 
 
-     BuddyAllocator *buddy = new BuddyAllocator(4096 << 12);
+    BuddyAllocator *buddy = new BuddyAllocator(1 << 25);
 //        BuddyAllocator *buddy = new BuddyAllocator(2048);
     currentGlobalAllocator = buddy;
-    printf("Buddy allocator took %lu microseconds.\n", buddyScenario());
-     currentGlobalAllocator = &dAllocator;
-     printf("Buddy scenario with default allocator took %lu microseconds.\n", buddyScenario());
+    printf("Buddy allocator took %lu microseconds.\n", realisticBuddyScenario());
+    currentGlobalAllocator = &dAllocator;
+    printf("Buddy scenario with default allocator took %lu microseconds.\n", realisticBuddyScenario());
+
+    long sumBuddy = 0;
+    long sumDefault = 0;
+    for (int i = 0; i < 10; i++) {
+        currentGlobalAllocator = buddy;
+        sumBuddy += realisticBuddyScenario();
+        currentGlobalAllocator = &dAllocator;
+        sumDefault += realisticBuddyScenario();
+    }
+    sumBuddy /= 10;
+    sumDefault /= 10;
+    double diff = (double)(sumBuddy)/(double)(sumDefault);
+    printf("Buddy performed in %lu and default in %lu.\n", sumBuddy, sumDefault);
+    printf("Buddy performed in %f of the default time.\n", diff);
 
     delete buddy;
 
@@ -284,4 +300,92 @@ int main()
 	//stackScenario(10);
 
     return 0;
+}
+
+
+long realisticBuddyScenario() {
+
+    const int initialCount = 100;
+    int initialSize = 1 << 16;
+    char *initialArr[initialCount];
+    int levels = 100;
+    const int levelAllocCount = 100;
+    int levelSize = 1 << 15;
+    char *levelArr[levelAllocCount];
+    int frames = 100;
+    const int frameAllocCount = 1000;
+    int frameSize = 1 << 10;
+    char *frameArr[frameAllocCount];
+
+
+    // Start timer
+    long diff = 0;
+    #if defined(__WIN32) || defined(WIN32)  || defined(_WIN32)
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    #else
+    uint64_t start, stop;
+    start = mach_absolute_time();
+    #endif
+
+    //allocate inital data
+    for (int i = 0; i < initialCount; i++) {
+        initialArr[i] = currentGlobalAllocator->alloc_arr<char>(initialSize);
+    }
+    //6.5 MB
+    //use the memory.
+    for (int i = 0; i < initialCount; i++) {
+        memset(initialArr[i], i%256, initialSize);
+    }
+
+    //for every level:
+    for (int level = 0; level < levels; level++) {
+        //allocate level data
+        for (int i = 0; i < levelAllocCount; i++) {
+            levelArr[i] = currentGlobalAllocator->alloc_arr<char>(levelSize);
+        }
+        //9.8MB
+        //use the memory.
+        for (int i = 0; i < levelAllocCount; i++) {
+            memset(levelArr[i], i%256, levelSize);
+        }
+
+        //for every frame
+        for (int frame = 0; frame < frames; frame++) {
+            //allocate frame data
+            for (int i = 0; i < frameAllocCount; i++) {
+                frameArr[i] = currentGlobalAllocator->alloc_arr<char>(frameSize);
+            }
+            //total allocations: 100 * 2^16 + 100*2^15 + 1000*2^10
+            //use the memory.
+            for (int i = 0; i < frameAllocCount; i++) {
+                memset(frameArr[i], i%256, frameSize);
+            }
+
+            //dealloc frame
+            for (int i = 0; i < frameAllocCount; i++) {
+                currentGlobalAllocator->dealloc(frameArr[i]);
+            }
+        }
+
+        //dealloc level
+        for (int i = 0; i < levelAllocCount; i++) {
+            currentGlobalAllocator->dealloc(levelArr[i]);
+        }
+
+    }
+
+
+    //dealloc inital data
+    for (int i = 0; i < initialCount; i++) {
+        currentGlobalAllocator->dealloc(initialArr[i]);
+    }
+    //end timer
+    #if defined(__WIN32) || defined(WIN32) || defined(_WIN32)
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+  	diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    #else
+    stop = mach_absolute_time();
+    diff = stop - start;
+    #endif
+    return diff;
 }
