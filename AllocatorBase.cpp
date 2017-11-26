@@ -17,8 +17,10 @@ AllocatorBase::AllocatorBase() : ID{ nextFreeID } {
 }
 
 #ifdef ENABLE_STOMP
-AllocatorBase::AllocatorBase(StompFlag stompFlag) {
+AllocatorBase::AllocatorBase(StompFlag stompFlag)  : ID{ nextFreeID } {
     // std::cout << "ctor AllocatorBase" << std::endl;
+
+	++nextFreeID;
     mStompAllocator = this;
 }
 #endif // ENABLE_STOMP
