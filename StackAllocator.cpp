@@ -52,8 +52,7 @@ void* StackAllocator::alloc_internal(size_t size)
 	current_pointer = m_head;
 
 	// move the head to the start of the next block
-	m_offset += size * sizeof(size_t);
-	m_head = static_cast<char*>(m_head) + m_offset;
+	m_head = static_cast<char*>(m_head) + m_offset * sizeof(size_t);
 
 	// check if out of memory
 	if (m_head > m_end)
@@ -61,7 +60,8 @@ void* StackAllocator::alloc_internal(size_t size)
 		return nullptr;
 	}
 
-	//m_offset+=4;
+	//m_offset += size * sizeof(size_t);
+	m_offset += 1;
 	return current_pointer;
 }
 
@@ -78,6 +78,8 @@ void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
 			//std::cout << "No block available to remove from stack, underflow prevented." << std::endl;
 			m_head = m_start;
 		}
+
+		m_offset -= 1;
 	}
 }
 

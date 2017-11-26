@@ -98,6 +98,7 @@ inline void StackTester::timeTestAllocDeallocIntervals(size_t stackSize, size_t 
 		for (j = 0; j < objPerInterval; ++j) // alloc objects
 		{
 			testVec->push_back(sizeof(T));
+			new T;
 			//defaultAlloc[j] = malloc(sizeof(T));
 		}
 
