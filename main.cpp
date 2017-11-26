@@ -98,6 +98,15 @@ void poolScenario(size_t numObjects = 1000000) {
 	PoolTester::scenario2<C>(numObjects, 16);
 	PoolTester::scenario2<C>(numObjects, 32);
 
+	std::cout << "\n\nTesting pool size:\n";
+	PoolTester::scenario1<int>(10000, 1);
+	PoolTester::scenario1<int>(100000, 1);
+	PoolTester::scenario1<int>(1000000, 1);
+	PoolTester::scenario1<int>(10000000, 1);
+
+	std::cout << "\n\nTesting random:\n";
+	PoolTester::testRandom();
+
 	std::getchar();
 }
 
@@ -236,7 +245,6 @@ long clockFunction(void (*func) ()) {
 
 int main()
 {
-
     DefaultAllocator dAllocator = DefaultAllocator();
 
 

@@ -7,7 +7,7 @@
 #include "MemoryTracker.h"
 
 //#define ENABLE_STOMP true
-#define TRACK_MEMORY true
+//#define TRACK_MEMORY true
 #define ENABLE_ALLOC_DEBUG
 
 class StompAllocator;

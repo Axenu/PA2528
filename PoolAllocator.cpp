@@ -88,10 +88,6 @@ void* PoolAllocator::alloc_internal(size_t size) {
 void PoolAllocator::dealloc_internal(void *p) {
 	uintptr_t deallocatedAddress = reinterpret_cast<uintptr_t>(p);
 
-	//assert(deallocatedAddress >= base);
-	//assert((deallocatedAddress - base) % alignment == 0);
-	//assert(deallocatedAddress - base < base + numElements * elementSize);
-
 	// Loop through free list to check that the pointer is not already deallocated
 	/*void* iterator = firstFree;
 	while (iterator != nullptr) {

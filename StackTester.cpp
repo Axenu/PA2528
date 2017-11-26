@@ -9,7 +9,7 @@ void bufferOverflowTest(AllocatorBase* currentGlobalAllocator)
 	std::cout << "Running stack allocator buffer overflow test..." << std::endl;
 	
 	//test code
-	size_t a, b;
+	size_t a = 0, b = 0; // init to 0 to stop compiler complaints
 
 	// add code to initialize a & b
 
