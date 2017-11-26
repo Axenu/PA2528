@@ -23,7 +23,7 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 		posix_memalign(&m_start, alignment, sizeStack * sizeof(size_t));
 #endif
 	else
-		m_start = malloc(sizeStack * sizeof(size_t));
+		m_start = malloc(sizeStack * sizeStack * sizeof(size_t));
 
 	// store a pointer to the end of the memory block
 	m_end = static_cast<char*>(m_start) + sizeStack * sizeof(size_t);
