@@ -238,7 +238,7 @@ void runStompScenarios()
 
     {
         std::cout << "Running StompAllocator-BuddyAllocator " << checkStr << " test..." << std::endl;
-        BuddyAllocator allocator(StompAllocator::getPageSize() << 12);
+        BuddyAllocator allocator(StompAllocator::getPageSize() << 13);
         currentGlobalAllocator = &allocator;
         buddyScenario();
     }
