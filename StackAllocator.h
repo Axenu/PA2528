@@ -30,7 +30,7 @@ private:
 	// stack pointers
 	void* m_start;			// points at the start of the memory block
 	void* m_end;			// points at the upper bound (end) of the memory block
-	void* m_ptr_current;		// points at the current head of the stack (start + the current offset)
+	void* m_head;		// points at the current head of the stack (start + the current offset)
 };
 
 #endif

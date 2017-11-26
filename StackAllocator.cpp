@@ -31,7 +31,7 @@ StackAllocator::StackAllocator(size_t sizeStack, size_t alignment)
 	//std::cout << "Stack start: " << m_start << " | Stack end:" << m_end << std::endl;
 
 	// set the current "end" of the used memory as the start pointer
-	m_ptr_current = m_start;
+	m_head = m_start;
 }
 
 StackAllocator::~StackAllocator()
@@ -46,17 +46,17 @@ size_t StackAllocator::getSizeOfMemory()
 
 void* StackAllocator::alloc_internal(size_t size)
 {
-	//std::cout << "Stack allocating at address: " << m_ptr_current <<" | Size: "<< size << std::endl;
+	//std::cout << "Stack allocating at address: " << m_head <<" | Size: "<< size << std::endl;
 	void* current_pointer; // points at the start of the block
 
-	current_pointer = m_ptr_current;
+	current_pointer = m_head;
 
 	// move the head to the start of the next block
 	m_offset += size * sizeof(size_t);
-	m_ptr_current = static_cast<char*>(m_ptr_current) + m_offset;
+	m_head = static_cast<char*>(m_head) + m_offset;
 
 	// check if out of memory
-	if (m_ptr_current > m_end)
+	if (m_head > m_end)
 	{
 		return nullptr;
 	}
@@ -67,16 +67,16 @@ void* StackAllocator::alloc_internal(size_t size)
 
 void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
 {
-	if (m_ptr_current > m_start) // make sure the stack pointer is pointing ahead of the start of the stack to prevent underflow errors
+	if (m_head > m_start) // make sure the stack pointer is pointing ahead of the start of the stack to prevent underflow errors
 	{
 		// move the stack pointer back to the previous block
-		m_ptr_current = static_cast<char*>(m_ptr_current) - m_offset * sizeof(size_t);
-		//std::cout << "Stack deallocating at address: " << m_ptr_current << std::endl;
+		m_head = static_cast<char*>(m_head) - m_offset * sizeof(size_t);
+		//std::cout << "Stack deallocating at address: " << m_head << std::endl;
 
-		if (m_ptr_current < m_start) // check for underflow
+		if (m_head < m_start) // check for underflow
 		{
 			//std::cout << "No block available to remove from stack, underflow prevented." << std::endl;
-			m_ptr_current = m_start;
+			m_head = m_start;
 		}
 	}
 }
@@ -84,5 +84,5 @@ void StackAllocator::dealloc_internal(void* p) // no in pointer needed?
 void StackAllocator::reset()
 {
 	// reset the stack pointer back to the start of the stack
-	m_ptr_current = m_start;
+	m_head = m_start;
 }
